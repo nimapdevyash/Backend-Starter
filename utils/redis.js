@@ -1,7 +1,7 @@
 // redisClient.js
 const redis = require("redis");
 require("dotenv").config();
-const { toBool } = require("./utils/commonFunctions"); // your utility
+const { toBool } = require("../utils/commonFunctions"); // your utility
 const { REDIS } = require("./constants");
 
 

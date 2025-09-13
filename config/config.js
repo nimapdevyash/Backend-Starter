@@ -1,16 +1,16 @@
 const Joi = require("joi");
-const constants = require("../utils/constants");
+const { CONSTANTS } = require("../utils/constants");
 const { toBool } = require("../utils/commonFunctions");
 require("dotenv").config();
 const env = process.env.NODE_ENV;
 
 const DB = {
-  USERNAME: env == constants.enviroments.test ? "root" : process.env.DB_USERNAME,
-  PASSWORD: env == constants.enviroments.test ? "root" : process.env.DB_PASSWORD,
-  DATABASE: env == constants.enviroments.test ? "greenland_test_db" : process.env.DB_DATABASE_NAME,
-  HOST: env == constants.enviroments.test ? "127.0.0.1" : process.env.DB_HOST,
+  USERNAME: env == CONSTANTS.ENVIROMENTS.test ? "root" : process.env.DB_USERNAME,
+  PASSWORD: env == CONSTANTS.ENVIROMENTS.test ? "root" : process.env.DB_PASSWORD,
+  DATABASE: env == CONSTANTS.ENVIROMENTS.test ? "greenland_test_db" : process.env.DB_DATABASE_NAME,
+  HOST: env == CONSTANTS.ENVIROMENTS.test ? "127.0.0.1" : process.env.DB_HOST,
   PORT: process.env.DB_PORT,
-  DIALECT: env == constants.enviroments.test ? "postgres" : process.env.DB_DIALECT,
+  DIALECT: env == CONSTANTS.ENVIROMENTS.test ? "postgres" : process.env.DB_DIALECT,
   POOL: {
     MAX: parseInt(process.env.DB_POOL_MAX) || 20,
     MIN: parseInt(process.env.DB_POOL_MIN) || 5,
@@ -21,7 +21,6 @@ const DB = {
     MAX: parseInt(process.env.DB_RETRY) || 3,
   },
   LOGGING: toBool(process.env.DB_LOGGING),
-  SYNC: process.env.DB_SYNC_TYPE || "NONE",
 };
 
 const verifyDB = () => {
@@ -31,7 +30,7 @@ const verifyDB = () => {
     DATABASE: Joi.string().required(),
     HOST: Joi.string().required(),
     PORT: Joi.string().required(),
-    DIALECT: Joi.string().valid(...Object.values(constants.db_dialects)),
+    DIALECT: Joi.string().valid(...Object.values(CONSTANTS.DB.DIALECTS.postgres)),
     POOL: {
       MAX: Joi.number(),
       MIN: Joi.number(),
@@ -41,8 +40,6 @@ const verifyDB = () => {
     RETRY: {
       MAX: Joi.number(),
     },
-    LOGGING: Joi.bool(),
-    SYNC: Joi.string().valid(...Object.values(constants.db_sync_options)).required(),
   })
     .validateAsync(DB)
     .then(() => console.log("Running Envirenment => ", env))

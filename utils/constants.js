@@ -1,9 +1,8 @@
-const { toBool } = require("./commonFunctions");
 require("dotenv").config();
+const { toBool } = require("./commonFunctions");
 
-const contriesnow_api = process.env.CONTRIESNOW_API || "https://countriesnow.space/api/v0.1/contries";
+let CONSTANTS = {
 
-module.exports = {
   PORT: process.env.PORT,
   CRON: process.env.SUBSCRIPTION_PROPERTY_CRON || "0 0 * * *", // runs everyday at 12 am
 
@@ -22,6 +21,9 @@ module.exports = {
   },
 
   EMAIL: {
+    TEMPLATE: {
+      OTP: "otp"
+    },
     USER: process.env.EMAIL_USER,
     PASSWORD: process.env.EMAIL_PASSWORD,
     HOST: process.env.EMAIL_HOST,
@@ -73,13 +75,20 @@ module.exports = {
     AFTER_UPSERT: "afterUpsert",
   },
 
+  DB: {
+    DIALECTS: {
+      postgres: "postgres",
+      mysql: "mysql",
+    },
+  },
+
   APP_CONFIG: {
     MAX_ALLOWED_FILE_SIZE: "MAX_ALLOWED_FILE_SIZE",
     OTP_VALID_TIME: "OTP_VALID_TIME",
     ALLOWED_FILE_TYPES: "ALLOWED_FILE_TYPE",
   },
 
-  enviroments: {
+  ENVIROMENTS: {
     development: "DEVELOPMENT",
     test: "TEST",
     production: "PRODUCTION",
@@ -93,10 +102,6 @@ module.exports = {
     RETRIES: Number(process.env.REDIS_MAX_RETRIES || 10), // max reconnect attempts
     DELAY: Number(process.env.REDIS_RETRY_DELAY || 3000), // max retry delay in ms
   },
-
-  CONTRIESNOW_API: {
-    CONTRIES: contriesnow_api,
-    STATES: contriesnow_api + "/states",
-    CITIES: contriesnow_api + "/state/cities",
-  },
 };
+
+module.exports = { CONSTANTS };

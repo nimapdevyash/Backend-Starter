@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const constants = require("../../utils/constants");
+const {CONSTANTS} = require("../../utils/constants");
 
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define("user", {
@@ -34,16 +34,16 @@ module.exports = (sequelize, DataTypes) => {
   };
 
   // Hooks
-  User.addHook("beforeCreate", async (user) => {
+  User.addHook(CONSTANTS.HOOK_INSTANCES.BEFORE_CREATE, async (user) => {
     if (user.password) {
-      const salt = await bcrypt.genSalt(constants.SALT_ROUNDS);
+      const salt = await bcrypt.genSalt(CONSTANTS.SALT_ROUNDS);
       user.password = await bcrypt.hash(user.password, salt);
     }
   });
 
-  User.addHook("beforeUpdate", async (user) => {
+  User.addHook(CONSTANTS.HOOK_INSTANCES.BEFORE_UPDATE, async (user) => {
     if (user.changed("password")) {
-      const salt = await bcrypt.genSalt(constants.SALT_ROUNDS);
+      const salt = await bcrypt.genSalt(CONSTANTS.SALT_ROUNDS);
       user.password = await bcrypt.hash(user.password, salt);
     }
   });
