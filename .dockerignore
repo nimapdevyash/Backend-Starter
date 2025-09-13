@@ -1,0 +1,59 @@
+node_modules
+.env
+*.log
+.git
+.env.sample
+
+node_modules
+.env
+*.log
+.git
+.env.sample
+greenland-backend-dev.tar
+docker/
+Readme.md
+.gitignore
+Dockerfile
+docker-compose.yml
+Jenkinsfile
+Makefile
+
+# Node dependencies
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Environment files (secrets should not go inside image)
+.env
+*.env
+
+# Logs
+*.log
+logs/
+debug.log
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Git / CI files
+.git
+.gitignore
+.gitlab-ci.yml
+.github/
+
+# Build outputs
+dist/
+build/
+coverage/
+.tmp/
+.cache/
+
+# Docker temporary folders
+docker_temp_*
+*.tar
+*.gz

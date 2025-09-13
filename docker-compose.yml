@@ -1,0 +1,51 @@
+services:
+  backend:
+    image: greenland-backend-${DEPLOY_ENV}
+    container_name: greenland-backend-${DEPLOY_ENV}
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - greenland  
+    depends_on:
+      - db   
+    volumes:
+      - greenland-uploads:/usr/share/app/public
+
+  db:
+    image: postgres
+    container_name: greenland-db-${DEPLOY_ENV}
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    shm_size: 1gb 
+    command: [
+      "postgres",
+      "-c", "max_locks_per_transaction=256",
+      "-c", "idle_in_transaction_session_timeout=300000",
+      "-c", "shared_buffers=256MB",
+      "-c", "work_mem=16MB",
+      "-c", "maintenance_work_mem=64MB"
+    ]
+    volumes:
+      - greenland-db:/var/lib/postgresql/data 
+    networks:
+      - greenland
+
+  redis:
+    image: redis:latest
+    container_name: greenland-redis-${DEPLOY_ENV}
+    restart: always
+    ports:
+      - "6370:6379"
+    networks:
+      - greenland
+
+networks:
+  greenland:
+
+volumes:
+  greenland-db:
+  greenland-uploads:

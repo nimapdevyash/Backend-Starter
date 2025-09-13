@@ -1,0 +1,12 @@
+services:
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "7823:3000"
+
+  db:
+    ports:
+      - "7824:5432" 
+      
