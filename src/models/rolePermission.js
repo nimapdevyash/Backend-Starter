@@ -8,11 +8,11 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
       },
       roleId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: false,
       },
       permissionId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: false,
       },
     },

@@ -6,7 +6,8 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
       },
     userId : {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
+      allowNull: false
     },
     otp: {
       type: DataTypes.INTEGER,
