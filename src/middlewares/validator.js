@@ -4,7 +4,7 @@ const { throwIfUnprocessableEntityError } = require("../../utils/customError");
 const { ErrorMessage } = require("../../utils/responseMessages");
 
 exports.validate =
-  ({ schema, type = "body" }) =>
+  ({ schema, type = validation_types_enums.body }) =>
   async (req, res, next) => {
     try {
       throwIfUnprocessableEntityError({
@@ -27,7 +27,7 @@ exports.validate =
         statusCode: httpStatus.BAD_REQUEST,
         message: "Validation Error",
         details: error.details
-          ? error.details.map((d) => d.message) 
+          ? error.details.map((d) => d.message)
           : error.message,
       });
     }
