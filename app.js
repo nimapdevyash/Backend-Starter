@@ -13,8 +13,6 @@ const swaggerUi = require("swagger-ui-express");
 const { swaggerSpec } = require("./docs/swaggerSpec");
 const indexRouter = require('./src/routes/index');
 const { insertIntoErrorLogger } = require('./utils/errorLogger');
-const bodyParser = require('body-parser');
-const { errorWrapper } = require('./utils/commonFunctions');
 const { startServices } = require('./utils/serviceManager');
 
 const app = express();

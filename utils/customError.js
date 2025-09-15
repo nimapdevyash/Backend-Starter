@@ -56,56 +56,69 @@ class UnprocessableEntityError extends CustomError {
   }
 }
 
-exports.throwIfCustomError = ({condition , message}) => {
+const throwIfCustomError = ({condition , message}) => {
   if(condition) {
     throw new CustomError(message);
   }
 }
 
-exports.throwIfValidationError = ({condition , message}) => {
+const throwIfValidationError = ({condition , message}) => {
   if(condition) {
     throw new ValidationError(message);
   }
 }
 
-exports.throwIfBadRequestError = ({condition , message}) => {
+const throwIfBadRequestError = ({condition , message}) => {
   if(condition) {
     throw new BadRequestError(message);
   }
 }
 
-exports.throwIfInternalServerError = ({condition , message}) => {
+const throwIfInternalServerError = ({condition , message}) => {
   if(condition) {
     throw new InternalServerError(message);
   }
 }
 
-exports.throwIfUnauthorizedError = ({condition , message}) => {
+const throwIfUnauthorizedError = ({condition , message}) => {
   if(condition) {
     throw new UnauthorizedError(message);
   }
 }
 
-exports.throwIfForbiddenError = ({condition , message}) => {
+const throwIfForbiddenError = ({condition , message}) => {
   if(condition) {
     throw new ForbiddenError(message);
   }
 }
 
-exports.throwIfUnprocessableEntityError = ({condition , message}) => {
+const throwIfUnprocessableEntityError = ({condition , message}) => {
   if(condition) {
     throw new UnprocessableEntityError(message);
   }
 }
 
-exports.throwIfDataFoundError = ({condition , message}) => {
+const throwIfDataFoundError = ({condition , message}) => {
   if(condition) {
     throw new DataFoundError(message);
   }
 }
 
-exports.throwIfNoDataFoundError = ({condition , message}) => {
+const throwIfNoDataFoundError = ({condition , message}) => {
   if(!condition) {
     throw new NoDataFoundError(message);
   }
+}
+
+module.exports = {
+  CustomError,
+  throwIfCustomError,
+  throwIfValidationError,
+  throwIfBadRequestError,
+  throwIfInternalServerError,
+  throwIfUnauthorizedError,
+  throwIfForbiddenError,
+  throwIfUnprocessableEntityError,
+  throwIfNoDataFoundError,
+  throwIfDataFoundError
 }
