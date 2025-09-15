@@ -4,7 +4,6 @@ require("dotenv").config();
 const { toBool } = require("../utils/commonFunctions"); // your utility
 const { CONSTANTS } = require("./constants");
 
-
 let client;
 let isConnected = false;
 
@@ -51,12 +50,9 @@ if (toBool(CONSTANTS.REDIS.ENABLED )) {
   });
 }
 
-/**
- * Ensures a single Redis connection is established and reused
- * @returns {Promise<import('redis').RedisClientType|null>}
- */
+// Ensures a single Redis connection is established and reused
 async function getRedisClient() {
-  if (CONSTANTS.REDIS.ENABLED) {
+  if (!CONSTANTS.REDIS.ENABLED) {
     console.warn("⚠️ Redis is disabled via env");
     return null;
   }

@@ -99,7 +99,6 @@ exports.CONSTANTS = {
   REDIS: {
     HOST: process.env.REDIS_HOST || "127.0.0.1",
     PORT: Number(process.env.REDIS_PORT || 6379),
-    PASSWORD: process.env.REDIS_PASSWORD,
     ENABLED: toBool(process.env.REDIS_ENABLED || "true"), // toggle Redis usage
     RETRIES: Number(process.env.REDIS_MAX_RETRIES || 10), // max reconnect attempts
     DELAY: Number(process.env.REDIS_RETRY_DELAY || 3000), // max retry delay in ms

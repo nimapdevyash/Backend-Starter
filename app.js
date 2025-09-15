@@ -79,6 +79,7 @@ if (!fs.existsSync(publicDir)) {
  */
 
 startServices({
+  redis: true,
   bulkMailService: true,
   idleTransactionWatcherService: true,
   updatePropertyListingService: true,
