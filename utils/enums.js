@@ -98,3 +98,11 @@ exports.subscription_plan_history_action_types_enums = {
   update: "UPDATE",
   delete: "DELETE"
 }
+
+exports.validation_types_enums = {
+  body: "body",
+  all: "all",
+  params: "params",
+  query: "query",
+  params_body: "params_body"
+}
