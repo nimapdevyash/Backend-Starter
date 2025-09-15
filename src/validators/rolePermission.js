@@ -1,17 +1,25 @@
-const Joi = require('joi');
+const Joi = require("joi");
+const { uuidRule } = require("./commonValidators");
 
 exports.addRolePermissionValidation = Joi.object({
-  roleId: Joi.number().required(),
-  permissionId: Joi.number().required(),
-});
+  roleId: uuidRule.messages({ "any.required": "Role ID is required" }),
+  permissionId: uuidRule.messages({ "any.required": "Permission ID is required" }),
+}).options({ allowUnknown: false });
 
 exports.updateRolePermissionValidation = Joi.object({
-  id: Joi.number().required(),
-  roleId: Joi.number(),
-  permissionId: Joi.number(),
-});
+  id: uuidRule.messages({ "any.required": "ID is required" }),
+  roleId: uuidRule,
+  permissionId: uuidRule,
+}).options({ allowUnknown: false });
 
 exports.bulkUpdateRolePermissionsValidation = Joi.object({
-  roleId: Joi.number().required(),
-  permissionIds: Joi.array().items(Joi.number().required()).min(1).required(),
-});
+  roleId: uuidRule.messages({ "any.required": "Role ID is required" }),
+  permissionIds: Joi.array()
+    .items(uuidRule)
+    .min(1)
+    .required()
+    .messages({
+      "array.base": "Permission IDs must be an array",
+      "array.min": "At least one permission ID is required",
+    }),
+}).options({ allowUnknown: false });
