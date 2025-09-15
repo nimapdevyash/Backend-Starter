@@ -1,23 +1,30 @@
  
 /* eslint-disable max-len */ 
 const {handleSuccess} = require('../../utils/commonFunctions');
+const { throwIfDataFoundError, throwIfInternalServerError } = require('../../utils/customError');
+const { findOne, create } = require('../../utils/dbOperations');
 const { ErrorMessage, SuccessMesage } = require('../../utils/responseMessages');
+const models = require('../models');
 const db = require('../models');
 
 exports.createRolePermission = async(rolePermissionData) => { 
-  const options = {};
-  options.condition = {
-    roleId: rolePermissionData.roleId,
-    permissionId: rolePermissionData.permissionId,
-  };
 
-  const rolePermissionRecord = await commonFunctions.findOne(db.rolePermission, options);
-  commonFunctions.dataAlreadyExists({data: rolePermissionRecord , message: ErrorMessage.GENERAL_ERROR.DATA_ALREADY_EXISTS.message  });
+  const rolePermissionRecord = await findOne({
+    model: models.rolePermission,
+    condition: {
+      roleId: rolePermissionData.roleId,
+      permissionId: rolePermissionData.permissionId,
+    },
+  });
+  throwIfDataFoundError({condition: rolePermissionRecord , message: ErrorMessage.ALREADY_EXISTS("Record")});
 
-  const addRolePermission = await commonFunctions.create(db.rolePermission, rolePermissionData);
-  commonFunctions.dataNotFound({data : addRolePermission , message: ErrorMessage.GENERAL_ERROR.SERVER_ERROR.message});
-  return handleSuccess(SuccessMesage.CREATED("Role Permission")); 
+  const addRolePermission = await create({model: models.rolePermission, body: rolePermissionData});
+  throwIfInternalServerError({condition : addRolePermission , message: ErrorMessage.SERVER_ERROR()});
+
+  return handleSuccess({message: SuccessMesage.CREATED("Role Permission")}); 
 }; 
+
+// TODO: work on this and payment integration
 
 exports.fetchRolePermissionDetails = async(query) => { 
   const { fetchAll } = query;

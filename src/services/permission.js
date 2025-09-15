@@ -42,7 +42,7 @@ exports.fetchPermissionDetails = async ({ page = 1, limit = 10, search }) => {
 exports.fetchPermissionById = async ({ id }) => {
   const permissionRecord = await findByPk({ model: models.permission, id });
   throwIfBadRequestError({ condition: !permissionRecord, message: ErrorMessage.INVALID("Permission Id") });
-  return handleSuccess({message: SuccessMesage.FETCHED("Permissioin"), data: permissionRecord});
+  return handleSuccess({message: SuccessMesage.FETCHED("Permission"), data: permissionRecord});
 }; 
 
 exports.updatePermissionById = async({ id, updateData }) => { 

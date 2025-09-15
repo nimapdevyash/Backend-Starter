@@ -4,7 +4,7 @@ const { Op } = require('sequelize');
 const { InternalServerError, throwIfInternalServerError, throwIfNoDataFoundError, throwIfBadRequestError } = require('../../utils/customError'); 
 const {handleSuccess, getPagination} = require('../../utils/commonFunctions');
 const { ErrorMessage, SuccessMesage } = require('../../utils/responseMessages');
-const { create, findAll, findOne, findByPk, update } = require('../../utils/dbOperations');
+const { create, findAll, findOne, findByPk, update, destroy } = require('../../utils/dbOperations');
 const models = require('../models');
 
 exports.createRole = async(roleData) => { 
@@ -31,11 +31,11 @@ exports.fetchRoleDetails = async({page = 1 , limit = 10 , search}) => {
 
 exports.fetchRoleById = async({id}) => { 
 
-  const roleDetails = await findOne({
+  const roleDetails = await findByPk({
     model: models.role,
-    condition: { id: id, deletedAt: null },
+    id,
     include: [
-      { model: db.permission,
+      { model: models.permission,
         as: "permissions",
         through: { attributes: [] } 
       },
@@ -46,18 +46,18 @@ exports.fetchRoleById = async({id}) => {
   return handleSuccess({message: SuccessMesage.FETCHED("Role"), data: roleDetails});
 }; 
 
-exports.updateRoleById = async({id, updateBody}) => { 
+exports.updateRoleById = async({id, updatedBody}) => { 
   const roleRecord = await findByPk({model: models.role, id});
   throwIfBadRequestError({condition: !roleRecord , message: ErrorMessage.INVALID("Role Id")});
 
-  const updatedRoleRecord = await update({model: models.role, condition: { id }, updateBody, individualHooks: true}); 
+  const updatedRoleRecord = await update({model: models.role, condition: { id }, updatedBody, individualHooks: true , returning: true}); 
   throwIfInternalServerError({condition: !updatedRoleRecord[0] , message: ErrorMessage.SERVER_ERROR()});
 
-  return handleSuccess({message: SuccessMesage.UPDATED("Role")});
+  return handleSuccess({message: SuccessMesage.UPDATED("Role"), data: updatedRoleRecord});
 }; 
 
 exports.deleteRoleById = async ({ id }) => {
-  const removedRole = await commonFunctions.destroy(db.role, { id });
+  const removedRole = await destroy({ model: models.role, condition: { id } });
   throwIfBadRequestError({ condition: !removedRole, message: ErrorMessage.INVALID("Role Id") });
 
   return handleSuccess({message: SuccessMesage.DELETED("Role")});

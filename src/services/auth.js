@@ -162,15 +162,19 @@ exports.verifyEmail = async ({userId}) => {
 
 
 exports.changePassword = async ({userId , oldPassword, newPassword}) => {
-  const userRecord = await findByPk({model: models.user, id: userId});
-  throwIfNoDataFoundError({ condition: userRecord, message: ErrorMessage.NOT_FOUND("User") });
 
-  userRecord.comparePassword( oldPassword);
-  await update({
-    model: models.user,
-    condition: { id: userRecord.id },
-    updatedBody: { password: newPassword },
-  });
+  return await models.sequelize.transaction(async transaction => {
 
-  return handleSuccess({message: SuccessMesage.UPDATED("Password")});
+    const userRecord = await findByPk({model: models.user, id: userId});
+    throwIfNoDataFoundError({ condition: userRecord, message: ErrorMessage.NOT_FOUND("User") });
+
+    await userRecord.comparePassword( oldPassword);
+    await update({
+      model: models.user,
+      condition: { id: userRecord.id },
+      updatedBody: { password: newPassword },
+    });
+
+    return handleSuccess({message: SuccessMesage.UPDATED("Password")});
+  })
 };
