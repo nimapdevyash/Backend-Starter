@@ -5,9 +5,9 @@ module.exports = (sequelize, DataTypes) => {
     "userToken",
     {
       id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
-        autoIncrement: true,
       },
       userId: {
         type: DataTypes.INTEGER,
@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
   userToken.associate = (model) => {
-    userToken.belongsTo(model.user, { foreignKey: "userId", });
+    userToken.belongsTo(model.user, { foreignKey: "userId" });
   };
 
   return userToken;

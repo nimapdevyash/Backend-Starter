@@ -3,8 +3,8 @@ module.exports = (sequelize, DataTypes) => {
     "fileUpload",
     {
       id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       url: {

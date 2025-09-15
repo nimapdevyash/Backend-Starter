@@ -3,9 +3,9 @@ module.exports = (sequelize, DataTypes) => {
     "errorLogger",
     {
       id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
-        autoIncrement: true,
       },
       message: {
         type: DataTypes.STRING,

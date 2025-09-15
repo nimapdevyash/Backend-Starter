@@ -1,10 +1,10 @@
 module.exports = (sequelize, DataTypes) => {
   const otp = sequelize.define("otp", {
     id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-    },
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
     userId : {
       type: DataTypes.INTEGER,
     },

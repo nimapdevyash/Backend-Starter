@@ -1,12 +1,12 @@
 const bcrypt = require("bcrypt");
-const {CONSTANTS} = require("../../utils/constants");
+const { CONSTANTS } = require("../../utils/constants");
 
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define("user", {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
-      autoIncrement: true,
     },
     firstName: {
       type: DataTypes.STRING(50),
@@ -30,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
 
   // Associations
   User.associate = (models) => {
-    User.hasMany(models.userRole, { foreignKey: "userId", as: "userRole", });
+    User.hasMany(models.userRole, { foreignKey: "userId", as: "userRole" });
   };
 
   // Hooks

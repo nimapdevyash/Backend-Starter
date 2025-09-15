@@ -3,8 +3,8 @@ const { httpMethod_enums } = require("../../utils/enums");
 module.exports = (sequelize, DataTypes) => {
   const permission = sequelize.define("permission", {
     id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     actionName: {
