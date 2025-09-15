@@ -1,25 +1,21 @@
  
 /* eslint-disable max-len */
-const db = require('../models'); 
 const { Op } = require('sequelize');
-const { InternalServerError } = require('../../utils/customError'); 
-const handleSuccess = require('../../utils/successHandler'); 
-const commonFunctions = require('../../utils/commonFunctions');
+const { InternalServerError, throwIfInternalServerError, throwIfNoDataFoundError, throwIfBadRequestError } = require('../../utils/customError'); 
+const {handleSuccess, getPagination} = require('../../utils/commonFunctions');
 const { ErrorMessage, SuccessMesage } = require('../../utils/responseMessages');
+const { create, findAll, findOne, findByPk, update } = require('../../utils/dbOperations');
+const models = require('../models');
 
 exports.createRole = async(roleData) => { 
-  const roleCreated = await commonFunctions.create(db.role, roleData);
-  commonFunctions.dataNotFound({data: roleCreated , message: ErrorMessage.GENERAL_ERROR.SERVER_ERROR.message})
-  return handleSuccess(SuccessMesage.CREATED("Role") , {roleCreated});
+  const roleCreated = await create({model: models.role, body: roleData});
+  throwIfInternalServerError({condition: !roleCreated , message: ErrorMessage.SERVER_ERROR()});
+  return handleSuccess({message: SuccessMesage.CREATED("Role") , data: roleCreated});
 }; 
 
-exports.fetchRoleDetails = async(query) => { 
-  let page = Number(query.page) || 1;
-  let limit = Number(query.limit) || 10;
-  const search = query.search || '';
-  let options = {};
+exports.fetchRoleDetails = async({page = 1 , limit = 10 , search}) => { 
   
-  options.condition = { 
+  let condition = { 
     ...(search && {
       [Op.or] : [
         { name : { [Op.iLike]: `%${search}%` } },
@@ -28,41 +24,41 @@ exports.fetchRoleDetails = async(query) => {
     }),
   };
 
-  options = {...options , ...commonFunctions.getPagination({page , limit})};
-
-  const roleRecords = await commonFunctions.findAll(db.role, options);
-  commonFunctions.dataNotFound({data: roleRecords.count , message: ErrorMessage.GENERAL_ERROR.DATA_NOT_FOUND.message});
-  return handleSuccess(SuccessMesage.FETCHED("Role"), roleRecords); 
+  const roleRecords = await findAll({model: models.role, condition , ...getPagination({limit, page})});
+  throwIfNoDataFoundError({condition: roleRecords.count , message: ErrorMessage.NOT_FOUND("Roles")});
+  return handleSuccess({ message: SuccessMesage.FETCHED("Role"), data: roleRecords}); 
 }; 
 
-exports.fetchRoleById = async(id) => { 
+exports.fetchRoleById = async({id}) => { 
 
-  const options = {};
-  options.condition = { id: id, deletedAt: null };
-  options.include = [{ model: db.permission, as: "permissions", through: { attributes: [] } }];
+  const roleDetails = await findOne({
+    model: models.role,
+    condition: { id: id, deletedAt: null },
+    include: [
+      { model: db.permission,
+        as: "permissions",
+        through: { attributes: [] } 
+      },
+    ],
+  });
+  throwIfBadRequestError({condition: !roleDetails , message: ErrorMessage.INVALID("Role Id")});
 
-  const roleDetails = await commonFunctions.findOne(db.role, options);
-  commonFunctions.dataNotFound({data: roleDetails , message: ErrorMessage.ROLE_ERROR.NOT_FOUND.message});
-
-  return handleSuccess(SuccessMesage.FETCHED("Role"), roleDetails);
+  return handleSuccess({message: SuccessMesage.FETCHED("Role"), data: roleDetails});
 }; 
 
-exports.updateRoleById = async(id, updateBody) => { 
-  const roleFound = await commonFunctions.findOne(db.role, { id });
-  commonFunctions.dataNotFound({data: roleFound , message: ErrorMessage.GENERAL_ERROR.SERVER_ERROR.message})
+exports.updateRoleById = async({id, updateBody}) => { 
+  const roleRecord = await findByPk({model: models.role, id});
+  throwIfBadRequestError({condition: !roleRecord , message: ErrorMessage.INVALID("Role Id")});
 
-  const updateRole = await commonFunctions.update(db.role, { id }, updateBody, {individualHooks: true}); 
+  const updatedRoleRecord = await update({model: models.role, condition: { id }, updateBody, individualHooks: true}); 
+  throwIfInternalServerError({condition: !updatedRoleRecord[0] , message: ErrorMessage.SERVER_ERROR()});
 
-  if (updateRole[0] !== 1) { 
-    throw new InternalServerError(ErrorMessage.GENERAL_ERROR.SERVER_ERROR.message); 
-  } 
-  return handleSuccess(SuccessMesage.UPDATED("Role"));
+  return handleSuccess({message: SuccessMesage.UPDATED("Role")});
 }; 
 
-exports.deleteRoleById = async(id) => { 
-  
+exports.deleteRoleById = async ({ id }) => {
   const removedRole = await commonFunctions.destroy(db.role, { id });
-  commonFunctions.dataNotFound({data: removedRole , message: ErrorMessage.ROLE_ERROR.NOT_FOUND.message});
+  throwIfBadRequestError({ condition: !removedRole, message: ErrorMessage.INVALID("Role Id") });
 
-  return handleSuccess(SuccessMesage.DELETED("Role"));
+  return handleSuccess({message: SuccessMesage.DELETED("Role")});
 }; 

@@ -15,12 +15,10 @@ const indexRouter = require('./src/routes/index');
 const { insertIntoErrorLogger } = require('./utils/errorLogger');
 const bodyParser = require('body-parser');
 const { errorWrapper } = require('./utils/commonFunctions');
-const { verifyPaymentAndUpdateStatus } = require('./src/controllers/payment');
 const { startServices } = require('./utils/serviceManager');
 
 const app = express();
 
-app.use('/api/payment/listen', bodyParser.raw({ type: "application/json"}), errorWrapper(verifyPaymentAndUpdateStatus))
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

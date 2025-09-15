@@ -1,122 +1,108 @@
 /* eslint-disable max-len */
+const nodemailer = require("nodemailer");
+const path = require("path");
+const fs = require("fs").promises;
+
 const { emailEnqueValidation } = require("../src/validators/commonValidators");
-const constants = require("./constants");
+const { CONSTANTS } = require("./constants");
+const {create} = require("./dbOperations")
+const model = require("../src/models");
 
-const nodemailer = require('nodemailer');
-const path = require('path');
-const fs = require('fs').promises;
-const commonFunctions = require('./commonFunctions');
-const { EMAIL } = require('./constants');
-const model = require('../src/models');
+// ---------------- CONFIG ----------------
+const MAX_FILE_SIZE_MB = CONSTANTS.EMAIL.MAX_FILE_SIZE_MB;
+const MAX_RETRY_ATTEMPTS = CONSTANTS.EMAIL.MAX_RETRY_ATTEMPTS;
 
+// ---------------- STATE ----------------
 const mailQueue = [];
 let bulkMailIntervalId = null;
 
 const transporter = nodemailer.createTransport({
-  host: EMAIL.HOST,
-  port: EMAIL.PORT,
-  secure: EMAIL.ISSECURE,
+  host: CONSTANTS.EMAIL.HOST,
+  port: CONSTANTS.EMAIL.PORT,
+  secure: CONSTANTS.EMAIL.ISSECURE,
   auth: {
-    user: EMAIL.USER,
-    pass: EMAIL.PASSWORD
+    user: CONSTANTS.EMAIL.USER,
+    pass: CONSTANTS.EMAIL.PASSWORD,
   },
 });
 
-async function getFileSize(filepath) {
-  try {
-    const stats = await fs.stat(filepath);
-    if (!stats.isFile()) {
-      throw new Error('Path is not a file');
-    }
-    return stats.size / (1024 * 1024);
-  } catch (error) {
-    throw new Error('Failed to get file size', error);
-  }
-};
+// ---------------- HELPERS ----------------
+async function getFileSizeMB(filepath) {
+  const stats = await fs.stat(filepath);
+  if (!stats.isFile()) throw new Error("Path is not a file");
+  return stats.size / (1024 * 1024);
+}
 
 function getContentType(filepath) {
   const ext = path.extname(filepath).toLowerCase();
   const mimeTypes = {
-    '.pdf': 'application/pdf',
-    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    '.csv': 'text/csv',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.png': 'image/png',
-    '.webp': 'image/webp',
-    '.svg': 'image/svg+xml',
+    ".pdf": "application/pdf",
+    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ".csv": "text/csv",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".svg": "image/svg+xml",
   };
-  return mimeTypes[ext] || 'application/octet-stream';
+  return mimeTypes[ext] || "application/octet-stream";
 }
 
-const sendEmail = async ({
-  to,
-  subject,
-  html,
-  filepath = null,
-}) => {
+async function logEmailError(info) {
+  try {
+    await create({model: model.emailLogs, body: info});
+  } catch (err) {
+    console.error("Failed to log email error:", err.message);
+  }
+}
+
+// ---------------- CORE ----------------
+async function sendEmail({ to, subject, html, filepath = null }) {
   const recipients = Array.isArray(to) ? to : [to];
-  if (
-    !recipients.length ||
-    recipients.some((email) => !email || !/\S+@\S+\.\S+/.test(email)) ||
-    !subject ||
-    !html
-  ) {
-    throw new Error(
-      "Valid recipient(s), subject, and HTML content are required"
-    );
+
+  if (!recipients.length || recipients.some((email) => !email || !/\S+@\S+\.\S+/.test(email)) || !subject || !html) {
+    throw new Error("Valid recipient(s), subject, and HTML content are required");
+  }
+
+  const mailOptions = {
+    from: CONSTANTS.EMAIL.USER,
+    to: recipients.length === 1 ? recipients[0] : recipients,
+    subject,
+    html,
+  };
+
+  if (filepath) {
+    const fileSize = await getFileSizeMB(filepath);
+    if (fileSize > MAX_FILE_SIZE_MB) {
+      throw new Error("File size exceeds 20MB limit");
+    }
+    mailOptions.attachments = [
+      {
+        filename: path.basename(filepath),
+        path: filepath,
+        contentType: getContentType(filepath),
+      },
+    ];
   }
 
   try {
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: recipients.length === 1 ? recipients[0] : recipients,
-      subject,
-      html,
-    };
-
-    if (filepath) {
-      const fileSize = await getFileSize(filepath);
-      if (fileSize > 20) {
-        throw new Error("File size exceeds 20MB limit");
-      }
-      mailOptions.attachments = [
-        {
-          filename: path.basename(filepath),
-          path: filepath,
-          contentType: getContentType(filepath),
-        },
-      ];
-    }
-
     await transporter.sendMail(mailOptions);
-    return {
-      status: "success",
-      message: `Email sent successfully to ${recipients.join(", ")}`,
-    };
+    return { status: "success", message: `Sent to ${recipients.join(", ")}` };
   } catch (error) {
-    const errorInfo = {
+    await logEmailError({
       to: recipients.join(", "),
       subject,
       errorMessage: error.message,
       stackTrace: error.stack,
-    };
-
-    try {
-      await commonFunctions.create(model.emailLogs, errorInfo);
-    } catch (logError) {
-      console.error("Failed to log email error to DB:", logError.message);
-    }
-    throw new Error(
-      `Failed to send email to ${recipients.join(", ")}: ${error.message}`
-    );
+    });
+    throw error;
   }
-};
+}
 
-sendBulkMail = async () => {
+async function processBatch() {
   if (!mailQueue.length) return;
 
-  const batchSize = constants.BulkMailBatchSize ;
+  const batchSize = CONSTANTS.BulkMailBatchSize;
   const mailsToSend = mailQueue.splice(0, batchSize);
 
   await Promise.all(
@@ -124,33 +110,33 @@ sendBulkMail = async () => {
       try {
         await sendEmail(mailInfo);
       } catch (err) {
-        console.error("Failed to send email:", mailInfo, err);
-
-        // push back to queue for retry
-        mailQueue.push(mailInfo);
+        if ((mailInfo.retryCount || 0) < MAX_RETRY_ATTEMPTS) {
+          console.warn("Retrying failed email:", mailInfo.to, err.message);
+          mailQueue.push({ ...mailInfo, retryCount: (mailInfo.retryCount || 0) + 1 });
+        } else {
+          console.error("Dropping email after max retries:", mailInfo.to);
+        }
       }
     })
   );
-};
+}
 
-// ------------------------ expose only services and not the whole functionality ------------------------
-
-// verify and schedule the emails to sent appropriatelly
-exports.enqueueEmail = async ({to , html , subject , filepath }) => {
-  await emailEnqueValidation.validateAsync({to , html , subject , filepath});
-  mailQueue.push({ to, html, subject, filepath});
+// ---------------- PUBLIC API ----------------
+exports.enqueueEmail = async ({ to, html, subject, filepath }) => {
+  await emailEnqueValidation.validateAsync({ to, html, subject, filepath });
+  mailQueue.push({ to, html, subject, filepath, retryCount: 0 });
 };
 
 exports.startBulkMailService = () => {
-  if (bulkMailIntervalId) return; 
-  bulkMailIntervalId = setInterval(() => {
-    exports.sendBulkMail();
-  }, constants.BulkMailBufferInterval);
+  if (bulkMailIntervalId) return;
+  bulkMailIntervalId = setInterval(processBatch, CONSTANTS.BulkMailBufferInterval);
 };
 
-exports.stopBulkMailService = () => {
+exports.stopBulkMailService = async () => {
   if (bulkMailIntervalId) {
     clearInterval(bulkMailIntervalId);
     bulkMailIntervalId = null;
+    // Optionally flush queue before shutdown
+    if (mailQueue.length) await processBatch();
   }
 };

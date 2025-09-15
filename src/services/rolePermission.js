@@ -1,7 +1,6 @@
  
 /* eslint-disable max-len */ 
-const handleSuccess = require('../../utils/successHandler'); 
-const commonFunctions = require('../../utils/commonFunctions');
+const {handleSuccess} = require('../../utils/commonFunctions');
 const { ErrorMessage, SuccessMesage } = require('../../utils/responseMessages');
 const db = require('../models');
 

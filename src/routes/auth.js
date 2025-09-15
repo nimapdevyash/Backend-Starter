@@ -12,7 +12,7 @@ const {
   userIdValidation,
   changePasswordValidation,
   mobileVerification,
-} = require("../../validators/auth");
+} = require("../validators/auth");
 
 //ADMIN
 router.post('/login', validate(logInUserValidation), errorWrapper(authController.login));

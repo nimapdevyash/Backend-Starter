@@ -2,29 +2,29 @@
 const redis = require("redis");
 require("dotenv").config();
 const { toBool } = require("../utils/commonFunctions"); // your utility
-const { REDIS } = require("./constants");
+const { CONSTANTS } = require("./constants");
 
 
 let client;
 let isConnected = false;
 
 // cheak if the redis connection is enabled or not
-if (toBool(REDIS_ENABLED)) {
+if (toBool(CONSTANTS.REDIS.ENABLED )) {
   client = redis.createClient({
     socket: {
-      host: REDIS.HOST,
-      port: REDIS.PORT,
+      host: CONSTANTS.REDIS.HOST,
+      port: CONSTANTS.REDIS.PORT,
       reconnectStrategy: (retries) => {
-        if (retries > REDIS.RETRIES) {
+        if (retries > CONSTANTS.REDIS.RETRIES) {
           console.error("❌ Redis reconnect failed after max retries");
           return new Error("Redis reconnect failed");
         }
-        const delay = Math.min(retries * 100, Number(REDIS_RETRY_DELAY));
+        const delay = Math.min(retries * 100, Number(CONSTANTS.REDIS.DELAY));
         console.warn(`⚠️ Redis reconnect attempt #${retries}, waiting ${delay}ms`);
         return delay;
       },
     },
-    password: REDIS.PASSWORD,
+    password: CONSTANTS.REDIS.PASSWORD,
   });
 
   // Event listeners
@@ -56,7 +56,7 @@ if (toBool(REDIS_ENABLED)) {
  * @returns {Promise<import('redis').RedisClientType|null>}
  */
 async function getRedisClient() {
-  if (REDIS.ENABLED) {
+  if (CONSTANTS.REDIS.ENABLED) {
     console.warn("⚠️ Redis is disabled via env");
     return null;
   }

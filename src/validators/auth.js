@@ -1,6 +1,6 @@
 const Joi = require("joi");
 
-const { ACTION_TYPES } = require("../../utils/constants");
+const { CONSTANTS } = require("../../utils/constants");
 
 exports.logInUserValidation = Joi.object({
 
@@ -23,10 +23,10 @@ exports.otpvalidation = Joi.object({
   otp: Joi.string().length(6).required(),
   referenceCode: Joi.string().required(),// ---> UUID Removed Integration
   actionType: Joi.string().valid(
-    ACTION_TYPES.VERIFY.EMAIL,
-    ACTION_TYPES.VERIFY.MOBILE,
-    ACTION_TYPES.PASSWORD.FORGOT,
-    ACTION_TYPES.PASSWORD.RESET,
+    CONSTANTS.ACTION_TYPES.VERIFY.EMAIL,
+    CONSTANTS.ACTION_TYPES.VERIFY.MOBILE,
+    CONSTANTS.ACTION_TYPES.PASSWORD.FORGOT,
+    CONSTANTS.ACTION_TYPES.PASSWORD.RESET,
   ),
 });
 

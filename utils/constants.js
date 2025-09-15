@@ -1,8 +1,7 @@
 require("dotenv").config();
 const { toBool } = require("./commonFunctions");
 
-let CONSTANTS = {
-
+exports.CONSTANTS = {
   PORT: process.env.PORT,
   CRON: process.env.SUBSCRIPTION_PROPERTY_CRON || "0 0 * * *", // runs everyday at 12 am
 
@@ -22,13 +21,16 @@ let CONSTANTS = {
 
   EMAIL: {
     TEMPLATE: {
-      OTP: "otp"
+      OTP: "OTP",
     },
     USER: process.env.EMAIL_USER,
     PASSWORD: process.env.EMAIL_PASSWORD,
     HOST: process.env.EMAIL_HOST,
     PORT: 587,
     ISSECURE: false,
+
+    MAX_FILE_SIZE_MB: 20,
+    MAX_RETRY_ATTEMPTS: 3,
   },
 
   email_templates: {
@@ -103,5 +105,3 @@ let CONSTANTS = {
     DELAY: Number(process.env.REDIS_RETRY_DELAY || 3000), // max retry delay in ms
   },
 };
-
-module.exports = { CONSTANTS };

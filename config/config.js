@@ -30,7 +30,7 @@ const verifyDB = () => {
     DATABASE: Joi.string().required(),
     HOST: Joi.string().required(),
     PORT: Joi.string().required(),
-    DIALECT: Joi.string().valid(...Object.values(CONSTANTS.DB.DIALECTS.postgres)),
+    DIALECT: Joi.string().valid(...Object.values(CONSTANTS.DB.DIALECTS)),
     POOL: {
       MAX: Joi.number(),
       MIN: Joi.number(),
@@ -40,6 +40,7 @@ const verifyDB = () => {
     RETRY: {
       MAX: Joi.number(),
     },
+    LOGGING: Joi.boolean().required()
   })
     .validateAsync(DB)
     .then(() => console.log("Running Envirenment => ", env))

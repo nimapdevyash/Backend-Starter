@@ -1,31 +1,30 @@
 const {
   handleSuccess,
-  getPagination,
-  paginateResponse,
-  populateTemplate
+  populateTemplate,
+  generateReferenceCode,
+  generateSecureOTP
 } = require("../../utils/commonFunctions");
 const { ErrorMessage, SuccessMesage } = require("../../utils/responseMessages");
 const models = require("../models")
 const { Op } = require("sequelize");
-const { v4: uuidv4 } = require("uuid");
 const { generateToken, verifyToken } = require("../../utils/jwt");
 const { CONSTANTS } = require("../../utils/constants");
 const { findOne, create, update, destroy, findByPk, findAll } = require("../../utils/dbOperations");
 const {throwIfNoDataFoundError, throwIfInternalServerError, throwIfValidationError, throwIfBadRequestError} = require("../../utils/customError");
 const { enqueueEmail } = require("../../utils/emailService");
 
-exports.logIn = async (userData) => {
-  const userRecord = await findOne({model: models.user,  condition: { email: userData.email },} );
-  throwIfNoDataFoundError({ condition: userRecord, message: "User With THis Email Does Not Exists", });
+exports.logIn = async ({email, password}) => {
+  const userRecord = await findOne({model: models.user,  condition: {email},} );
+  throwIfNoDataFoundError({ condition: userRecord, message: ErrorMessage.INVALID("Email"), });
 
   const isPasswordMatch = await userRecord.comparePassword(userData.password);
-  throwIfNoDataFoundError({ condition: isPasswordMatch, message: "Invlaid Password" });
+  throwIfNoDataFoundError({ condition: isPasswordMatch, message: ErrorMessage.INVALID("Password")});
 
   const token = generateToken({ userId: userRecord.id });
   await create({model: models.userToken, body: { userId: userRecord.id, token }});
 
   return handleSuccess({
-    message: SuccessMesage.USER.LOGGEDIN.message,
+    message: "Logged In Successfully",
     data: {
       userId: userRecord.id,
       token,
@@ -41,14 +40,14 @@ exports.forgotPassword = async ({ email }) => {
   throwIfInternalServerError({condition: emailTemplateRecord , message: ErrorMessage.NOT_FOUND("Otp Email Template")});
 
   // send otp
-  const otp = commonFunctions.generateSecureOTP();
+  const otp = generateSecureOTP();
   enqueueEmail({
     to: email,
     subject: emailTemplateRecord.subject,
     html: populateTemplate({data: {...userRecord , otp} , templateString: emailTemplateRecord.html}) 
   });
 
-  const referenceCode = commonFunctions.generateReferenceCode();
+  const referenceCode = generateReferenceCode();
   const otp_valid_time = CONSTANTS.OTP_VALID_TIME_MINUTES;
   const validTil = new Date(Date.now() + otp_valid_time * 60 * 1000);
 
@@ -128,8 +127,8 @@ exports.verifyEmail = async ({userId}) => {
   });
   throwIfBadRequestError({condition: otpRecord.count , message: "User with this email is already verified" })
 
-  const referenceCode = commonFunctions.generateReferenceCode();
-  let otp = commonFunctions.generateSecureOTP();
+  const referenceCode = generateReferenceCode();
+  let otp = generateSecureOTP();
 
   const otp_valid_time = CONSTANTS.OTP_VALID_TIME_MINUTES;
   const validTil = new Date(Date.now() + otp_valid_time * 60 * 1000);

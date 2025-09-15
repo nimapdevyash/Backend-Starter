@@ -1,25 +1,21 @@
 const { idleTransactionsWatcher } = require("../config/connection");
-const { updatePropertyListing } = require("./cron/propertyListing");
 const { syncModels } = require("./dbSync");
-const { startBulkMailService } = require("./sendBulkMail");
+const { startBulkMailService } = require("./emailService");
 
 const serviceMap = {
   bulkMailService: startBulkMailService,
-  updatePropertyListingService: updatePropertyListing,
   syncModelsService: syncModels,
   idleTransactionWatcherService: idleTransactionsWatcher,
 };
 
 exports.startServices = ({
   bulkMailService = false,
-  updatePropertyListingService = false,
   syncModelsService = false,
   idleTransactionWatcherService = false,
 }) =>
   setTimeout(() => {
     const config = {
       bulkMailService,
-      updatePropertyListingService,
       syncModelsService,
       idleTransactionWatcherService,
     };

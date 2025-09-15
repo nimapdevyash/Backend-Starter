@@ -1,64 +1,62 @@
  
 /* eslint-disable max-len */
-const handleSuccess = require('../../utils/successHandler'); 
-const commonFunctions = require('../../utils/commonFunctions');
+const { handleSuccess, getPagination } = require("../../utils/commonFunctions"); 
 const { Op } = require('sequelize');
 const models = require('../models');
 const { ErrorMessage, SuccessMesage } = require('../../utils/responseMessages');
-const { serverError, dataNotFoundError, badRequestError } = require('../../utils/errorHandlers');
-const { badRequest } = require('../../utils/response');
+const {
+  throwIfBadRequestError,
+  throwIfNoDataFoundError,
+  throwIfInternalServerError,
+} = require("../../utils/customError");
+const { create, findAll, findByPk, update, destroy } = require("../../utils/dbOperations");
 
 exports.createPermission = async(permissionData) => { 
-  const addedPermission = await commonFunctions.create({model: models.permission, body: permissionData});
-  serverError({condition: addedPermission , message: ErrorMessage.SERVER_ERROR()});
+  const addedPermission = await create({ model: models.permission, body: permissionData });
+  throwIfInternalServerError({condition: !addedPermission , message: ErrorMessage.SERVER_ERROR()});
   
-  return handleSuccess(SuccessMesage.CREATED("Permission")); 
+  return handleSuccess({message: SuccessMesage.CREATED("Permission")}); 
 }; 
 
-exports.fetchPermissionDetails = async (query) => {
-  let {
-    page = Number(query.page) || 1,
-    limit = Number(query.limit) || 10,
-    actionName,
-    description,
-    method,
-  } = query;
+exports.fetchPermissionDetails = async ({ page = 1, limit = 10, search }) => {
 
-  const permissionRecords = await commonFunctions.findAll({
+  const permissionRecords = await findAll({
     model: models.permission,
-    condition: {
-        [Op.or]: [
-          actionName && { actionName: { [Op.iLike]: `%${actionName}%` } },
-          description && { description: { [Op.iLike]: `%${description}%` } },
-          method && { method: { [Op.iLike]: `%${method}%` } },
-        ],
-    },
+    condition: search
+      ? {
+          [Op.or]: [
+            { actionName: { [Op.iLike]: `%${search}%` } },
+            { description: { [Op.iLike]: `%${search}%` } },
+            { method: { [Op.iLike]: `%${search}%` } },
+          ],
+        }
+      : {},
     attributes: [ "id", "actionName", "description", "baseUrl", "path", "method", "createdAt", "updatedAt" ],
-    ...commonFunctions.getPagination({ page, limit }),
+    ...getPagination({ page, limit }),
   });
-  dataNotFoundError({ condition: permissionRecords.count, message: ErrorMessage.NOT_FOUND("Permission Records") });
+  throwIfNoDataFoundError({ condition: permissionRecords.count, message: ErrorMessage.NOT_FOUND("Permission Records") });
 
-  return handleSuccess(SuccessMesage.FETCHED("Permission"), permissionRecords);
+  return handleSuccess({ message: SuccessMesage.FETCHED("Permission"), data: permissionRecords });
 }; 
 
-exports.fetchPermissionById = async(id) => { 
-  const permissionRecord = await commonFunctions.findByPk({ model: models.permission, id });
-  badRequestError({condition: !permissionRecord , message: ErrorMessage.INVALID("Permission Id")});
-  return handleSuccess(SuccessMesage.FETCHED("Permissioin"), permissionRecord); 
+exports.fetchPermissionById = async ({ id }) => {
+  const permissionRecord = await findByPk({ model: models.permission, id });
+  throwIfBadRequestError({ condition: !permissionRecord, message: ErrorMessage.INVALID("Permission Id") });
+  return handleSuccess({message: SuccessMesage.FETCHED("Permissioin"), data: permissionRecord});
 }; 
 
-exports.updatePermissionById = async( id, updateData ) => { 
-  const permissionRecord = await commonFunctions.findByPk({model: models.permission, id});
-  badRequestError({condition: !permissionRecord , message: ErrorMessage.INVALID("Permission Id")});
+exports.updatePermissionById = async({ id, updateData }) => { 
+  const permissionRecord = await findByPk({model: models.permission, id});
+  throwIfBadRequestError({condition: !permissionRecord , message: ErrorMessage.INVALID("Permission Id")});
 
-  const updatedRecord = await commonFunctions.update({model: models.permission, condition: { id }, updatedBody: updateData , options: {individualHooks: true}});
-  serverError({condition: !updatedRecord[0] , message: ErrorMessage.SERVER_ERROR()});
+  const updatedRecord = await update({model: models.permission, condition: { id }, updatedBody: updateData , individualHooks: true});
+  throwIfInternalServerError({condition: !updatedRecord[0] , message: ErrorMessage.SERVER_ERROR()});
 
-  return handleSuccess(SuccessMesage.UPDATED("Permission")); 
+  return handleSuccess({message: SuccessMesage.UPDATED("Permission")}); 
 }; 
 
-exports.deletePermissionById = async(id) => { 
-  const removedPermission = await commonFunctions.destroy({model: models.permission, condition: { id }});  
-  badRequestError({condition: !removedPermission , message: ErrorMessage.INVALID("Permission Id") });
-  return handleSuccess(SuccessMesage.DELETED("Permission")); 
+exports.deletePermissionById = async({id}) => { 
+  const removedPermission = await destroy({model: models.permission, condition: { id }});  
+  throwIfBadRequestError({condition: !removedPermission , message: ErrorMessage.INVALID("Permission Id") });
+  return handleSuccess({message: SuccessMesage.DELETED("Permission")}); 
 }; 
