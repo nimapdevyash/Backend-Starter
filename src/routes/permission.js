@@ -14,11 +14,19 @@ const {validate} = require("../middlewares/validator");
 const permission = require("../middlewares/checkPermission");
 const  { addPermissionValidation, updatePermissionValidation, permissionIdValidation } = require("../validators/permission");
 const { idValidation } = require('../validators/commonValidators');
+const { validation_types_enums } = require('../../utils/enums');
 
-router.post('/',checkAuth, validate(addPermissionValidation), errorWrapper(insertPermission)); 
+// create
+router.post('/',checkAuth, validate({schema: addPermissionValidation }), errorWrapper(insertPermission)); 
+
+// read
 router.get('/', checkAuth, permission, errorWrapper(retrievePermission)); 
-router.get('/:id',checkAuth, permission, validate(idValidation),  errorWrapper(retrievePermissionById)); 
-router.put('/:id', checkAuth, permission, validate(updatePermissionValidation), errorWrapper(modifyPermission)); 
-router.delete('/:id', checkAuth, permission, validate(idValidation), errorWrapper(removePermission)); 
+router.get('/:id',checkAuth, permission, validate({schema: idValidation , type: validation_types_enums.params}),  errorWrapper(retrievePermissionById)); 
+
+// update
+router.put( "/:id", checkAuth, permission, validate({ schema: updatePermissionValidation, type: validation_types_enums.params_body, }), errorWrapper(modifyPermission)); 
+
+// delete
+router.delete('/:id', checkAuth, permission, validate({schema: idValidation , type: validation_types_enums.params}), errorWrapper(removePermission)); 
 
 module.exports = router; 

@@ -15,12 +15,20 @@ const permission = require("../middlewares/checkPermission");
 const {addRolePermissionValidation , updateRolePermissionValidation, bulkUpdateRolePermissionsValidation} = require("../validators/rolePermission")
 const {validate} = require("../middlewares/validator");
 const { idValidation } = require("../validators/commonValidators");
+const { validation_types_enums } = require("../../utils/enums");
 
-router.post( "/", checkAuth, permission, validate(addRolePermissionValidation), errorWrapper(insertRolePermission));
+// create
+router.post( "/", checkAuth, permission, validate({schema: addRolePermissionValidation}), errorWrapper(insertRolePermission));
+router.post("/bulk-change", checkAuth, validate({schema: bulkUpdateRolePermissionsValidation}), errorWrapper(alterRolePermissions));
+
+// read
 router.get("/", checkAuth, permission, errorWrapper(retrieveRolePermission));
-router.get( "/:id", checkAuth, permission,validate(idValidation), errorWrapper(retrieveRolePermissionById));
-router.put( "/:id", checkAuth, permission, validate(updateRolePermissionValidation), errorWrapper(modifyRolePermission));
-router.delete( "/:id", checkAuth, permission ,validate(idValidation), errorWrapper(removeRolePermission));
-router.post("/bulk-change", checkAuth, validate(bulkUpdateRolePermissionsValidation), errorWrapper(alterRolePermissions));
+router.get( "/:id", checkAuth, permission,validate({schema: idValidation , type: validation_types_enums.params}), errorWrapper(retrieveRolePermissionById));
+
+// update
+router.put( "/:id", checkAuth, permission, validate({schema: updateRolePermissionValidation , type: validation_types_enums.params_body}), errorWrapper(modifyRolePermission));
+
+// delete
+router.delete( "/:id", checkAuth, permission ,validate({schema: idValidation , type: validation_types_enums.params}), errorWrapper(removeRolePermission));
 
 module.exports = router;

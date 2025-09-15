@@ -14,13 +14,15 @@ const {
   mobileVerification,
 } = require("../validators/auth");
 
-//ADMIN
-router.post('/login', validate(logInUserValidation), errorWrapper(authController.login));
-router.post('/forgot-password', validate(emailValidation),  errorWrapper(authController.forgotPassword));
-router.post('/verify-email', validate(userIdValidation),  errorWrapper(authController.verifyEmail));
-router.post('/verify-mobile', validate(mobileVerification),  errorWrapper(authController.verifyMobile));
-router.post('/verify-otp', validate(otpvalidation),  errorWrapper(authController.verifyOtp));
-router.put('/reset-password', validate(resetPasswordValidation), errorWrapper(authController.resetPassword));
-router.put('/change-password', checkAuth, validate(changePasswordValidation), errorWrapper(authController.changePassword));
+// create
+router.post('/login', validate({schema: logInUserValidation}), errorWrapper(authController.login));
+router.post('/forgot-password', validate({schema: emailValidation}),  errorWrapper(authController.forgotPassword));
+router.post('/verify-email', validate({schema: userIdValidation}),  errorWrapper(authController.verifyEmail));
+router.post('/verify-mobile', validate({schema: mobileVerification}),  errorWrapper(authController.verifyMobile));
+router.post('/verify-otp', validate({schema: otpvalidation}),  errorWrapper(authController.verifyOtp));
+
+// update
+router.put('/reset-password', validate({schema: resetPasswordValidation}), errorWrapper(authController.resetPassword));
+router.put('/change-password', checkAuth, validate({schema: changePasswordValidation}), errorWrapper(authController.changePassword));
 
 module.exports = router;

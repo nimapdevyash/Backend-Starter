@@ -12,11 +12,19 @@ const checkPermission = require('../middlewares/checkPermission');
 const { addRoleValidation , updateRoleValidation } = require("../validators/role")
 const { validate } = require("../middlewares/validator");
 const { idValidation } = require('../validators/commonValidators');
+const { validation_types_enums } = require('../../utils/enums');
  
-router.post('/', checkAuth, checkPermission, validate(addRoleValidation), errorWrapper(insertRole));
+// create
+router.post('/', checkAuth, checkPermission, validate({schema: addRoleValidation}), errorWrapper(insertRole));
+
+// read
 router.get('/', checkAuth, checkPermission, errorWrapper(retrieveRole)); 
-router.get('/:id', checkAuth, checkPermission, validate(idValidation), errorWrapper(retrieveRoleById)); 
-router.put('/:id', checkAuth, checkPermission, validate(updateRoleValidation), errorWrapper(modifyRole)); 
-router.delete('/:id', checkAuth, checkPermission, validate(idValidation), errorWrapper(removeRole)); 
+router.get('/:id', checkAuth, checkPermission, validate({schema: idValidation , type: validation_types_enums.params}), errorWrapper(retrieveRoleById)); 
+
+// update
+router.put('/:id', checkAuth, checkPermission, validate({schema: updateRoleValidation, type: validation_types_enums.params_body}), errorWrapper(modifyRole)); 
+
+// delete
+router.delete('/:id', checkAuth, checkPermission, validate({schema: idValidation, type: validation_types_enums.params}), errorWrapper(removeRole)); 
 
 module.exports = router; 
