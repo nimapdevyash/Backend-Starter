@@ -24,8 +24,10 @@ exports.otpValidation = Joi.object({
   }),
   actionType: Joi.string()
     .valid(
-      ...CONSTANTS.ACTION_TYPES.VERIFY,
-      ...CONSTANTS.ACTION_TYPES.PASSWORD,
+      CONSTANTS.ACTION_TYPES.VERIFY.EMAIL,
+      CONSTANTS.ACTION_TYPES.VERIFY.MOBILE,
+      CONSTANTS.ACTION_TYPES.PASSWORD.FORGOT,
+      CONSTANTS.ACTION_TYPES.PASSWORD.RESET,
     )
     .required()
     .messages({
