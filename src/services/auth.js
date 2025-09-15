@@ -12,16 +12,18 @@ const { CONSTANTS } = require("../../utils/constants");
 const { findOne, create, update, destroy, findByPk, findAll } = require("../../utils/dbOperations");
 const {throwIfNoDataFoundError, throwIfInternalServerError, throwIfValidationError, throwIfBadRequestError} = require("../../utils/customError");
 const { enqueueEmail } = require("../../utils/emailService");
+const { setUserTokenDetails } = require("../../utils/cacheHandler");
 
 exports.logIn = async ({email, password}) => {
-  const userRecord = await findOne({model: models.user,  condition: {email},} );
+  const userRecord = await findOne({model: models.user,  condition: {email}, raw: false} );
   throwIfNoDataFoundError({ condition: userRecord, message: ErrorMessage.INVALID("Email"), });
 
-  const isPasswordMatch = await userRecord.comparePassword(userData.password);
+  const isPasswordMatch = await userRecord.comparePassword(password);
   throwIfNoDataFoundError({ condition: isPasswordMatch, message: ErrorMessage.INVALID("Password")});
 
   const token = generateToken({ userId: userRecord.id });
   await create({model: models.userToken, body: { userId: userRecord.id, token }});
+  setUserTokenDetails({userId: userRecord.id , data: token});
 
   return handleSuccess({
     message: "Logged In Successfully",

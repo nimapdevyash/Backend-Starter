@@ -32,5 +32,3 @@ exports.idleTransactionsWatcher = () =>
       console.error("Error while checking idle transactions:", err.message);
     }
   }, 30000);
-
-  // sequelize.sync({force: true});

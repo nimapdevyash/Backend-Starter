@@ -1,9 +1,9 @@
 const jwt = require('jsonwebtoken');
-const constants = require('./constants');
+const {CONSTANTS} = require('./constants');
 
-exports.generateToken = (payload) => jwt.sign(payload, constants.JWT.SECRET, {
-  algorithm: constants.JWT.ALGORITH,
-  expiresIn: constants.JWT.EXPIRES_IN
+exports.generateToken = (payload) => jwt.sign(payload, CONSTANTS.JWT.SECRET, {
+  algorithm: CONSTANTS.JWT.ALGORITH,
+  expiresIn: CONSTANTS.JWT.EXPIRES_IN
 });
 
-exports.verifyToken = (token) => jwt.verify(token, constants.JWT.SECRET);
+exports.verifyToken = (token) => jwt.verify(token, CONSTANTS.JWT.SECRET);

@@ -8,19 +8,25 @@ const { findOne, create, findByPk, update, findAll, destroy } = require("../../u
 const { throwIfDataFoundError, throwIfInternalServerError, throwIfNoDataFoundError, throwIfBadRequestError } = require("../../utils/customError");
 
 exports.createUser = async ({email , password}) => {
-  const userRecord = await findOne({model: models.user , condition : {email: email} });
-  throwIfDataFoundError({condition: userRecord , message: ErrorMessage.ALREADY_EXISTS("User With This Email")})
+  return await models.sequelize.transaction(async transaction => {
 
-  const userCreatedRecord = await  create({model: models.user, body: {email, password}});
-  throwIfInternalServerError({condition: !userCreatedRecord , message: ErrorMessage.SERVER_ERROR()});
+    const userRecord = await findOne({model: models.user , condition : {email: email} , transaction });
+    throwIfDataFoundError({condition: userRecord , message: ErrorMessage.ALREADY_EXISTS("User With This Email")})
 
-  const adminRoleRecord = await findOne({ model: models.userRole, condition: { name: { [Op.iLike]: role_enums.admin, }, } });
-  throwIfInternalServerError({condition: !adminRoleRecord , message: ErrorMessage.NOT_FOUND("Admin Role Record")});
+    const userCreatedRecord = await  create({model: models.user, body: {email, password} , transaction});
+    throwIfInternalServerError({condition: !userCreatedRecord , message: ErrorMessage.SERVER_ERROR()});
 
-  const userRole = await create({ model: models.userRole , body: {userId : userCreatedRecord.id , roleId : adminRoleRecord.id }});
-  throwIfInternalServerError({condition: !userRole , message: ErrorMessage.SERVER_ERROR()});
+    const adminRoleRecord = await findOne({ model: models.role, condition: { name: { [Op.iLike]: role_enums.admin, }, } , transaction });
+    throwIfInternalServerError({condition: !adminRoleRecord , message: ErrorMessage.NOT_FOUND("Admin Role Record")});
 
-  return handleSuccess({message: SuccessMesage.CREATED("User"), data: userCreatedRecord });
+    const userRole = await create({ model: models.userRole , body: {userId : userCreatedRecord.id , roleId : adminRoleRecord.id } , transaction});
+    throwIfInternalServerError({condition: !userRole , message: ErrorMessage.SERVER_ERROR()});
+
+    delete userCreatedRecord.dataValues.password ;
+    delete userCreatedRecord.dataValues.deletedAt ;
+
+    return handleSuccess({message: SuccessMesage.CREATED("User"), data: userCreatedRecord });
+  })
 };
 
 exports.updateUser = async ({id, userData}) => {

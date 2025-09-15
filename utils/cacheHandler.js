@@ -1,4 +1,6 @@
-const client = require("./redis");
+const getRedisClient = require("./redis");
+
+const client = getRedisClient();
 
 async function getJson(key) {
   if (!client.isReady) return null;
@@ -16,35 +18,13 @@ async function remove(key) {
   await client.del(key);
 }
 
+// ----------------- USER TOKEN -----------------
 exports.getUserTokenDetails = (userId) =>
   getJson(`USER_TOKEN_${userId}`);
 
-exports.setUserTokenDetails = (userId, data, expiresIn) =>
+// it only accepts seconds and 43200 is 12 hours
+exports.setUserTokenDetails = ({userId, data, expiresIn = 43200 }) =>
   setJson(`USER_TOKEN_${userId}`, data, expiresIn);
 
-exports.getCustomerTokenDetails = (userId) =>
-  getJson(`CUSTOMER_TOKEN_${userId}`);
-
-exports.setCustomerTokenDetails = (userId, data, expiresIn) =>
-  setJson(`CUSTOMER_TOKEN_${userId}`, data, expiresIn);
-
-exports.getUserDetails = (userId) =>
-  getJson(`USER_${userId}`);
-
-exports.setUserDetails = (userId, data, expiresIn) =>
-  setJson(`USER_${userId}`, data, expiresIn);
-
-exports.getCustomerDetails = (userId) =>
-  getJson(`CUSTOMER_${userId}`);
-
-exports.setCustomerDetails = (userId, data, expiresIn) =>
-  setJson(`CUSTOMER_${userId}`, data, expiresIn);
-
-exports.getAddressDetails = (addressId) =>
-  getJson(`ADDRESS_${addressId}`);
-
-exports.setAddressDetails = (addressId, data, expiresIn) =>
-  setJson(`ADDRESS_${addressId}`, data, expiresIn);
-
-exports.removeAddressDetails = (addressId) =>
-  remove(`ADDRESS_${addressId}`);
+exports.removeUserTokenDetails = (userId) =>
+  remove(`USER_TOKEN_${userId}`);

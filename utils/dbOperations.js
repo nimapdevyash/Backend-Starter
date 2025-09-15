@@ -18,11 +18,13 @@ exports.findOne = async ({
   attributes,
   raw = true,
   distinct = false,
+  transaction = null
 }) => {
   const fetchedRecord = await model.findOne({
     where: condition,
     ...(include && { include: include }),
     ...(attributes && { attributes: attributes }),
+    ...(transaction && {transaction}),
     distinct,
     raw,
   });

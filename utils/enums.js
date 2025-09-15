@@ -51,7 +51,7 @@ exports.property_listing_type_enums = {
 
 exports.role_enums = {
   admin : "ADMIN",
-  customer : "CUSTOMER"
+  customer : "USER"
 }
 
 exports.property_purchase_request_status_enums = {
