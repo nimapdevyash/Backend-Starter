@@ -106,3 +106,8 @@ exports.validation_types_enums = {
   query: "query",
   params_body: "params_body"
 }
+
+exports.db_sync_options_enums = {
+  alter: "alter",
+  force: "force"
+}

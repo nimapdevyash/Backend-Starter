@@ -63,3 +63,8 @@ exports.changePasswordValidation = Joi.object({
     "any.required": "New password is required",
   }),
 }).options({ allowUnknown: false });
+
+//USERID validation
+exports.idValidation = Joi.object({
+  userId: Joi.string().uuid().required(),
+});
