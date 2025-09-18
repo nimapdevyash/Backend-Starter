@@ -14,6 +14,7 @@ const { swaggerSpec } = require("./docs/swaggerSpec");
 const indexRouter = require('./src/routes/index');
 const { insertIntoErrorLogger } = require('./utils/errorLogger');
 const { startServices } = require('./utils/serviceManager');
+const { db_sync_options_enums } = require('./utils/enums');
 
 const app = express();
 
@@ -35,7 +36,7 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(async function(err, req, res, next) {
-  console.log(err)
+ 
   if (err.status === 500 || !(err instanceof CustomError)) {
     await insertIntoErrorLogger({
       message: err.message,
@@ -81,7 +82,7 @@ startServices({
   bulkMailService: true,
   idleTransactionWatcherService: true,
   updatePropertyListingService: true,
-  // syncModelsService: { modelNames: ["city"], syncType: db_sync_options.alter },
+  // syncModelsService: { modelNames: ["emailTemplate","emailLogs"], syncType: db_sync_options_enums.alter },
 });
 
 module.exports = app;

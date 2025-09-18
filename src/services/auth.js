@@ -22,6 +22,7 @@ exports.logIn = async ({email, password}) => {
   throwIfNoDataFoundError({ condition: isPasswordMatch, message: ErrorMessage.INVALID("Password")});
 
   const token = generateToken({ userId: userRecord.id });
+  
   await create({model: models.userToken, body: { userId: userRecord.id, token }});
   setUserTokenDetails({userId: userRecord.id , data: token});
 
@@ -35,42 +36,44 @@ exports.logIn = async ({email, password}) => {
 };
 
 exports.forgotPassword = async ({ email }) => {
-  const userRecord = await findOne({ model: models.user, condition: { email }, raw: true, });
+ 
+  const userRecord = await findOne({ model: models.user, condition: { email }, raw: true });
   throwIfNoDataFoundError({ condition: userRecord, message: ErrorMessage.NOT_FOUND("User") });
-
-  const emailTemplateRecord = await findOne({model: models.emailTemplate , condition: {name: CONSTANTS.EMAIL.TEMPLATE.OTP } , raw: true});
-  throwIfInternalServerError({condition: emailTemplateRecord , message: ErrorMessage.NOT_FOUND("Otp Email Template")});
-
+ 
+  const emailTemplateRecord = await findOne({model: models.emailTemplate , condition: {name: CONSTANTS.EMAIL.TEMPLATE.FORGOT_PASSWORD} , raw: true});
+ 
+  throwIfInternalServerError({condition: !emailTemplateRecord , message: ErrorMessage.NOT_FOUND("Otp Email Template")});
+  
   // send otp
   const otp = generateSecureOTP();
+  const otp_valid_time = CONSTANTS.OTP_VALID_TIME_MINUTES;
   enqueueEmail({
     to: email,
     subject: emailTemplateRecord.subject,
-    html: populateTemplate({data: {...userRecord , otp} , templateString: emailTemplateRecord.html}) 
+    html: populateTemplate({data: {...userRecord , otp,validTill:otp_valid_time} , templateString: emailTemplateRecord.html}) 
   });
 
   const referenceCode = generateReferenceCode();
-  const otp_valid_time = CONSTANTS.OTP_VALID_TIME_MINUTES;
-  const validTil = new Date(Date.now() + otp_valid_time * 60 * 1000);
+  
+  const validTill = new Date(Date.now() + otp_valid_time * 60 * 1000);
 
   await create({
     model: models.otp,
     body: {
       referenceCode,
       otp,
-      validTil,
+      validTill,
       userId: userRecord.id,
       recipientField: userRecord.email,
-      actionType: constants.ACTION_TYPES.PASSWORD.FORGOT,
+      actionType: CONSTANTS.ACTION_TYPES.PASSWORD.FORGOT,
     },
   });
 
-  return handleSuccess(SuccessMesage.SENT("OTP"), { referenceCode });
-};
+  return handleSuccess({ message: SuccessMesage.SENT("OTP"), data: { referenceCode } });  
+}
 
 exports.resetPassword = async ({ password, token }) => {
   const { userId } = verifyToken(token);
-
   const tokenRecord = await findOne({ model: models.userToken, condition: { token } });
   throwIfNoDataFoundError({ condition: tokenRecord, message: ErrorMessage.INVALID("Access Token") });
 
@@ -91,8 +94,9 @@ exports.verifyOTP = async ({ otp, referenceCode, actionType }) => {
     condition: { referenceCode, otp, actionType, isVerified: { [Op.ne]: true } },
     raw: true,
   });
+
   throwIfNoDataFoundError({ condition: otpRecord, message: ErrorMessage.INVALID("Otp"), });
-  throwIfValidationError({ condition: otpRecord.validTil.getTime() < Date.now(), message: "Otp Is Expired" })
+  throwIfValidationError({ condition: otpRecord.validTill.getTime() < Date.now(), message: "Otp Is Expired" })
 
   await update({
     model: models.otp,
@@ -109,16 +113,16 @@ exports.verifyOTP = async ({ otp, referenceCode, actionType }) => {
         userId: otpRecord.userId,
       },
     });
-    return handleSuccess({message: SuccessMesage.OTP.VERIFIED.message, data: { token }});
+    return handleSuccess({message: SuccessMesage.VERIFIED.message, data: { token }});
   }
 
   return handleSuccess({message: SuccessMesage.VERIFIED("OTP")});
 };
 
-exports.verifyEmail = async ({userId}) => {
-  const userRecord = await findByPk({model: models.user,id: userId});
-  throwIfBadRequestError({condition: userRecord , message: ErrorMessage.INVALID("User Id")});
-
+exports.verifyEmail = async ({id}) => {
+  const userRecord = await findByPk({model: models.user,id});
+  throwIfBadRequestError({condition: !userRecord , message: ErrorMessage.INVALID("User Id")});
+ 
   const otpRecord = await findAll({
     model: models.otp,
     condition: {
@@ -127,37 +131,38 @@ exports.verifyEmail = async ({userId}) => {
     },
     raw: true ,
   });
+
   throwIfBadRequestError({condition: otpRecord.count , message: "User with this email is already verified" })
 
   const referenceCode = generateReferenceCode();
   let otp = generateSecureOTP();
 
   const otp_valid_time = CONSTANTS.OTP_VALID_TIME_MINUTES;
-  const validTil = new Date(Date.now() + otp_valid_time * 60 * 1000);
+  const validTill = new Date(Date.now() + otp_valid_time * 60 * 1000);
 
   await create({
     model: models.otp, 
     body: {
       referenceCode,
       otp,
-      validTil,
+      validTill,
       userId: userRecord.id,
       recipientField: userRecord.email,
       actionType: CONSTANTS.ACTION_TYPES.VERIFY.EMAIL,
     }
   });
 
-  const  emailTemplateRecord = await findOne({model: models.emailTemplate , condition: {name: CONSTANTS.EMAIL.TEMPLATE.OTP } , raw: true});
-  throwIfInternalServerError({condition: emailTemplateRecord , message: ErrorMessage.NOT_FOUND("Otp Email Template")});
+  const  emailTemplateRecord = await findOne({model: models.emailTemplate , condition: {name: CONSTANTS.EMAIL.TEMPLATE.VERIFY_EMAIL } , raw: true});
+  throwIfInternalServerError({condition: !emailTemplateRecord , message: ErrorMessage.NOT_FOUND("Otp Email Template")});
 
   // send otp
   enqueueEmail({
-    to: email,
+    to: userRecord.email,
     subject: emailTemplateRecord.subject,
     html: populateTemplate({data: {...userRecord , otp} , templateString: emailTemplateRecord.html}) 
   });
 
-  return handleSuccess(SuccessMesage.SENT("OTP"), { referenceCode });
+  return handleSuccess({message: SuccessMesage.SENT("OTP"), data:{ referenceCode }});
 };
 
 
@@ -165,10 +170,10 @@ exports.changePassword = async ({userId , oldPassword, newPassword}) => {
 
   return await models.sequelize.transaction(async transaction => {
 
-    const userRecord = await findByPk({model: models.user, id: userId});
+    const userRecord = await findByPk({model: models.user, id: userId,raw:false},);
     throwIfNoDataFoundError({ condition: userRecord, message: ErrorMessage.NOT_FOUND("User") });
 
-    await userRecord.comparePassword( oldPassword);
+    await userRecord.comparePassword(oldPassword);
     await update({
       model: models.user,
       condition: { id: userRecord.id },

@@ -5,7 +5,7 @@ const fs = require("fs").promises;
 
 const { emailEnqueValidation } = require("../src/validators/commonValidators");
 const { CONSTANTS } = require("./constants");
-const {create} = require("./dbOperations")
+const { create } = require("./dbOperations");
 const model = require("../src/models");
 
 // ---------------- CONFIG ----------------
@@ -37,7 +37,8 @@ function getContentType(filepath) {
   const ext = path.extname(filepath).toLowerCase();
   const mimeTypes = {
     ".pdf": "application/pdf",
-    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ".xlsx":
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     ".csv": "text/csv",
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
@@ -50,7 +51,7 @@ function getContentType(filepath) {
 
 async function logEmailError(info) {
   try {
-    await create({model: model.emailLogs, body: info});
+    await create({ model: model.emailLogs, body: info });
   } catch (err) {
     console.error("Failed to log email error:", err.message);
   }
@@ -59,11 +60,6 @@ async function logEmailError(info) {
 // ---------------- CORE ----------------
 async function sendEmail({ to, subject, html, filepath = null }) {
   const recipients = Array.isArray(to) ? to : [to];
-
-  if (!recipients.length || recipients.some((email) => !email || !/\S+@\S+\.\S+/.test(email)) || !subject || !html) {
-    throw new Error("Valid recipient(s), subject, and HTML content are required");
-  }
-
   const mailOptions = {
     from: CONSTANTS.EMAIL.USER,
     to: recipients.length === 1 ? recipients[0] : recipients,
@@ -101,8 +97,8 @@ async function sendEmail({ to, subject, html, filepath = null }) {
 
 async function processBatch() {
   if (!mailQueue.length) return;
+  const batchSize = CONSTANTS.BULK_MAIL_BATCH_SIZE;
 
-  const batchSize = CONSTANTS.BulkMailBatchSize;
   const mailsToSend = mailQueue.splice(0, batchSize);
 
   await Promise.all(
@@ -112,7 +108,10 @@ async function processBatch() {
       } catch (err) {
         if ((mailInfo.retryCount || 0) < MAX_RETRY_ATTEMPTS) {
           console.warn("Retrying failed email:", mailInfo.to, err.message);
-          mailQueue.push({ ...mailInfo, retryCount: (mailInfo.retryCount || 0) + 1 });
+          mailQueue.push({
+            ...mailInfo,
+            retryCount: (mailInfo.retryCount || 0) + 1,
+          });
         } else {
           console.error("Dropping email after max retries:", mailInfo.to);
         }
@@ -129,7 +128,20 @@ exports.enqueueEmail = async ({ to, html, subject, filepath }) => {
 
 exports.startBulkMailService = () => {
   if (bulkMailIntervalId) return;
-  bulkMailIntervalId = setInterval(processBatch, CONSTANTS.BulkMailBufferInterval);
+  transporter
+    .verify()
+    .then(() => {
+      console.log("🚀 SMTP server is ready to send messages");
+      bulkMailIntervalId = setInterval(
+    processBatch,
+    CONSTANTS.BULK_MAIL_BUFFER_INTERVAL
+  );
+    })
+    .catch((err) => {
+      console.error("SMTP config error:", err);
+    });
+
+  
 };
 
 exports.stopBulkMailService = async () => {

@@ -13,28 +13,6 @@ exports.emailValidation = Joi.object({
   email: emailRule,
 }).options({ allowUnknown: false });
 
-// OTP
-exports.otpValidation = Joi.object({
-  otp: Joi.string().length(6).required().messages({
-    "string.length": "OTP must be 6 digits",
-    "any.required": "OTP is required",
-  }),
-  referenceCode: Joi.string().required().messages({
-    "any.required": "Reference code is required",
-  }),
-  actionType: Joi.string()
-    .valid(
-      CONSTANTS.ACTION_TYPES.VERIFY.EMAIL,
-      CONSTANTS.ACTION_TYPES.VERIFY.MOBILE,
-      CONSTANTS.ACTION_TYPES.PASSWORD.FORGOT,
-      CONSTANTS.ACTION_TYPES.PASSWORD.RESET,
-    )
-    .required()
-    .messages({
-      "any.only": "Invalid action type",
-      "any.required": "Action type is required",
-    }),
-}).options({ allowUnknown: false });
 
 // MOBILE VERIFICATION
 exports.mobileVerification = Joi.object({
@@ -63,3 +41,5 @@ exports.changePasswordValidation = Joi.object({
     "any.required": "New password is required",
   }),
 }).options({ allowUnknown: false });
+
+
