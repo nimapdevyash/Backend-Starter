@@ -14,7 +14,6 @@ function DatabaseConnect() {
 }
 
 DatabaseConnect();
-
 // Optional: development-only idle transaction watcher
 exports.idleTransactionsWatcher = () =>
   setInterval(async () => {

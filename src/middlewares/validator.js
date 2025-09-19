@@ -1,4 +1,4 @@
-const httpStatus = require("http-status");
+const httpStatus = require("http-status-codes");
 const { validation_types_enums } = require("../../utils/enums");
 const { throwIfUnprocessableEntityError } = require("../../utils/customError");
 const { ErrorMessage } = require("../../utils/responseMessages");
@@ -23,6 +23,7 @@ exports.validate =
 
       next();
     } catch (error) {
+   
       return res.status(httpStatus.BAD_REQUEST).json({
         statusCode: httpStatus.BAD_REQUEST,
         message: "Validation Error",

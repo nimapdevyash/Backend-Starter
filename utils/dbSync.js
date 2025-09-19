@@ -1,5 +1,6 @@
 const db = require("../src/models");
 const { db_sync_options } = require("./constants");
+const { db_sync_options_enums } = require("./enums");
 
 exports.syncModels = async ({
   modelNames = [],
@@ -16,11 +17,11 @@ exports.syncModels = async ({
       }
 
       await model.sync({
-        ...(syncType === db_sync_options.alter && { alter: true }),
-        ...(syncType === db_sync_options.force && { force: true }),
+        ...(syncType === db_sync_options_enums.alter && { alter: true }),
+        ...(syncType === db_sync_options_enums.force && { force: true }),
       });
 
-      if (syncType !== db_sync_options.none)
+      if (syncType !== db_sync_options_enums.none)
         console.log(`${model.tableName} is Synced with Type: ${syncType}`);
       else
         console.log(`${model.tableName} is Synced`);

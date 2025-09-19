@@ -21,7 +21,8 @@ exports.CONSTANTS = {
 
   EMAIL: {
     TEMPLATE: {
-      OTP: "OTP",
+      FORGOT_PASSWORD: "FORGOT_PASSWORD",
+      VERIFY_EMAIL: "VERIFY_EMAIL",
     },
     USER: process.env.EMAIL_USER,
     PASSWORD: process.env.EMAIL_PASSWORD,
@@ -103,4 +104,6 @@ exports.CONSTANTS = {
     RETRIES: Number(process.env.REDIS_MAX_RETRIES || 10), // max reconnect attempts
     DELAY: Number(process.env.REDIS_RETRY_DELAY || 3000), // max retry delay in ms
   },
+  BULK_MAIL_BUFFER_INTERVAL: Number(process.env.BULK_MAIL_BUFFER_INTERVAL || 3000), // in ms
+  BULK_MAIL_BATCH_SIZE : Number(process.env.BULK_MAIL_BATCH_SIZE || 10), // number of mails to be sent in one batch
 };
