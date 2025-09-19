@@ -116,8 +116,9 @@ exports.verifyOTP = async ({ otp, referenceCode, actionType }) => {
 };
 
 exports.verifyEmail = async ({userId}) => {
+  
   const userRecord = await findByPk({model: models.user,id: userId});
-  throwIfBadRequestError({condition: userRecord , message: ErrorMessage.INVALID("User Id")});
+  throwIfBadRequestError({condition: !userRecord , message: ErrorMessage.INVALID("User Id")});
 
   const otpRecord = await findAll({
     model: models.otp,
@@ -133,14 +134,14 @@ exports.verifyEmail = async ({userId}) => {
   let otp = generateSecureOTP();
 
   const otp_valid_time = CONSTANTS.OTP_VALID_TIME_MINUTES;
-  const validTil = new Date(Date.now() + otp_valid_time * 60 * 1000);
+  const validTill = new Date(Date.now() + otp_valid_time * 60 * 1000);
 
   await create({
     model: models.otp, 
     body: {
       referenceCode,
       otp,
-      validTil,
+      validTill,
       userId: userRecord.id,
       recipientField: userRecord.email,
       actionType: CONSTANTS.ACTION_TYPES.VERIFY.EMAIL,
@@ -148,13 +149,13 @@ exports.verifyEmail = async ({userId}) => {
   });
 
   const  emailTemplateRecord = await findOne({model: models.emailTemplate , condition: {name: CONSTANTS.EMAIL.TEMPLATE.OTP } , raw: true});
-  throwIfInternalServerError({condition: emailTemplateRecord , message: ErrorMessage.NOT_FOUND("Otp Email Template")});
+  throwIfInternalServerError({condition: !emailTemplateRecord , message: ErrorMessage.NOT_FOUND("Otp Email Template")});
 
   // send otp
   enqueueEmail({
-    to: email,
+    to: userRecord.email,
     subject: emailTemplateRecord.subject,
-    html: populateTemplate({data: {...userRecord , otp} , templateString: emailTemplateRecord.html}) 
+    html: populateTemplate({data: {...userRecord , otp, validTill: validTill.toLocaleString() } , templateString: emailTemplateRecord.html}) 
   });
 
   return handleSuccess(SuccessMesage.SENT("OTP"), { referenceCode });

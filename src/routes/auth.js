@@ -9,7 +9,7 @@ const {
   emailValidation,
   resetPasswordValidation,
   otpvalidation,
-  userIdValidation,
+  idValidation,
   changePasswordValidation,
   mobileVerification,
 } = require("../validators/auth");
@@ -17,7 +17,7 @@ const {
 // create
 router.post('/login', validate({schema: logInUserValidation}), errorWrapper(authController.login));
 router.post('/forgot-password', validate({schema: emailValidation}),  errorWrapper(authController.forgotPassword));
-router.post('/verify-email', validate({schema: userIdValidation}),  errorWrapper(authController.verifyEmail));
+router.post('/verify-email', validate({schema: idValidation}),  errorWrapper(authController.verifyEmail));
 router.post('/verify-mobile', validate({schema: mobileVerification}),  errorWrapper(authController.verifyMobile));
 router.post('/verify-otp', validate({schema: otpvalidation}),  errorWrapper(authController.verifyOtp));
 

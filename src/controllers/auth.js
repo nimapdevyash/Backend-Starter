@@ -14,7 +14,8 @@ exports.forgotPassword = async(req, res) => {
 
 
 exports.verifyEmail = async(req, res) => {
-  const result = await authService.verifyEmail(req.body);
+  const { userId } = req.body
+  const result = await authService.verifyEmail({userId});
   return response.ok(res, result);
 };
 

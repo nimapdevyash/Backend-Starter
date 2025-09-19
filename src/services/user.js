@@ -30,13 +30,10 @@ exports.createUser = async ({email , password}) => {
 };
 
 exports.updateUser = async ({id, userData}) => {
+  
   const userRecord = await findByPk({model: models.user , id});
-  throwIfDataFoundError({condition : userRecord , message: ErrorMessage.INVALID("UserId")})
+  throwIfDataFoundError({condition : !userRecord , message: ErrorMessage.INVALID("UserId")})
 
-  if(userData.languageId){
-    const languageRecord = await findByPk({model: models.language,id:  userData.languageId});
-    throwIfDataFoundError({condition: languageRecord , message: ErrorMessage.INVALID("Language Id")});
-  }
   const updatedUser = await update({model: models.user, condition: { id }, updatedBody: userData});
   throwIfInternalServerError({condition: !updatedUser[0] , message: ErrorMessage.SERVER_ERROR() });
 
@@ -48,7 +45,6 @@ exports.listUsers = async ({page = 1 , limit = 10 }) => {
   const userRecords = await findAll({
     model: models.user,
     attributes: { exclude: ["password", "updatedAt", "deletedAt"] },
-    include: [{ model: db.language, attributes: ["name"] }],
     ...getPagination({ limit, page }),
   });
   throwIfNoDataFoundError({condition: userRecords.count , message: ErrorMessage.NOT_FOUND("Users")})
@@ -57,11 +53,9 @@ exports.listUsers = async ({page = 1 , limit = 10 }) => {
 }
 
 exports.getUserById = async ({id})  => {
-
   const userRecord = await findByPk({
     model: models.user,
     id,
-    include: [ { model: db.language, attributes: ["name"], } ],
     attributes: { exclude: ["password", "updatedAt", "deletedAt"] },
   });
   throwIfBadRequestError({condition: !userRecord , message: ErrorMessage.INVALID("User Id")});
