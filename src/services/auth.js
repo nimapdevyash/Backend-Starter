@@ -173,7 +173,8 @@ exports.changePassword = async ({userId , oldPassword, newPassword}) => {
     const userRecord = await findByPk({model: models.user, id: userId,raw:false},);
     throwIfNoDataFoundError({ condition: userRecord, message: ErrorMessage.NOT_FOUND("User") });
 
-    await userRecord.comparePassword(oldPassword);
+    const invalidOldPassword = await userRecord.comparePassword(oldPassword);
+    throwIfValidationError({ condition: !invalidOldPassword, message: ErrorMessage.INVALID("Old Password") });
     await update({
       model: models.user,
       condition: { id: userRecord.id },
