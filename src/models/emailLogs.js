@@ -2,6 +2,11 @@ module.exports = (sequelize, DataTypes) => {
   const emailLogs = sequelize.define(
     "emailLogs",
     {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
       to: {
         type: DataTypes.TEXT,
         allowNull: false,

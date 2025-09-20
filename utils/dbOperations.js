@@ -28,6 +28,7 @@ exports.findOne = async ({
     distinct,
     raw,
   });
+
   return fetchedRecord;
 };
 

@@ -15,7 +15,7 @@ const { createEmailTemplateValidation, updateEmailTemplateValidation } = require
 const { nameValidation, idValidation } = require("../validators/commonValidators");
 
 
-router.post('/', checkAuth,/* checkPermission,*/ validate(createEmailTemplateValidation), errorWrapper(addEmailTemplate));
+router.post('/' ,checkAuth,/* checkPermission,*/ validate(createEmailTemplateValidation), errorWrapper(addEmailTemplate));
 router.get('/', checkAuth, /* checkPermission,*/ errorWrapper(listEmailTemplates));
 router.get('/:id', checkAuth, /* checkPermission,*/ validate(idValidation) ,errorWrapper(getTemplateById));
 router.get('/name/:name', checkAuth, /* checkPermission,*/ validate(nameValidation), errorWrapper(getTemplateByName));

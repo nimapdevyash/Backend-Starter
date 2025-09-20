@@ -1,13 +1,14 @@
 const Joi = require("joi");
-const { validation_types_enums } = require("../../utils/enums");
+const { validation_types_enums } = require('../../utils/enums');
 
 exports.createEmailTemplateValidation = {
   schema: Joi.object({
     name: Joi.string().trim().min(3).max(100).required(),
     subject: Joi.string().trim().min(3).max(200).required(),
     html: Joi.string().min(1).required(), // Can be HTML or plain text
+    isActive: Joi.boolean().optional()
   }),
-  type: validation_types_enums.body,
+  type: validation_types_enums.body
 };
 
 exports.updateEmailTemplateValidation = Joi.object({

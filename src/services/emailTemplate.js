@@ -7,13 +7,14 @@ const { findOne, create, findAll } = require("../../utils/dbOperations");
 const message = "Email Template";
 
 
-exports.addEmailTemplate = async ({ name, subject, html, userId }) => {
-  const templateRecord = await findOne({model: models.emailTemplate, condition: { name } });
+exports.addEmailTemplate = async ({ userId, subject, html, name }) => {
+
+const templateRecord = await findOne({model:models.emailTemplate, condition: { name } });
   throwIfDataFoundError({ condition: templateRecord, message: ErrorMessage.ALREADY_EXISTS("Name")});
 
-  const templateAdded = await create({ model:models.emailTemplate, body: { createdBy: userId, updatedBy: userId, html, name, subject }});
+  const templateAdded = await create({model:models.emailTemplate, body:{ subject, createdBy: userId,updatedBy: userId, html, name }});
 
-  if (!templateAdded)  throw new InternalServerError() ;
+  if (!templateAdded)  throw new InternalServerError();
 
   return handleSuccess(SuccessMesage.CREATED(message));
 };

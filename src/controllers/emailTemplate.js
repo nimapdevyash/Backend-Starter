@@ -7,10 +7,9 @@ const {
   removeTemplateById,
   updateTemplateById,
 } = require("../services/emailTemplate");
-
 exports.addEmailTemplate = async (req, res) => {
-  const { name, subject, html } = req.body;
-  const result = await addEmailTemplate({ name, subject, html , userId : req.userData.id});
+  const { html, name ,subject} = req.body;
+  const result = await addEmailTemplate({html,name,subject, userId : req.userData.id});
   return response.created(res, result);
 };
 

@@ -14,8 +14,7 @@ exports.forgotPassword = async(req, res) => {
 
 
 exports.verifyEmail = async(req, res) => {
-  const { userId } = req.body
-  const result = await authService.verifyEmail({userId});
+  const result = await authService.verifyEmail(req.userData);
   return response.ok(res, result);
 };
 
@@ -29,7 +28,7 @@ exports.verifyOtp = async(req, res) => {
 };
 
 exports.resetPassword = async(req, res) => {
-  const result = await authService.resetPassword(req.body);
+  const result = await authService.resetPassword({token:req.params.token , ...req.body});
   return response.ok(res, result);
 };
 

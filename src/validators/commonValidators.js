@@ -1,5 +1,5 @@
 const Joi = require("joi");
-
+const { CONSTANTS } = require("../../utils/constants");
 // Reusable rules
 const uuidRule = Joi.string()
   .guid({ version: "uuidv4" })
@@ -46,6 +46,28 @@ const suspensionValidation = Joi.object({
   suspensionReason: Joi.string().trim().min(5).max(255).required(),
 }).options({ allowUnknown: false });
 
+const otpValidation = Joi.object({
+  otp: Joi.string().length(6).required().messages({
+    "string.length": "OTP must be 6 digits",
+    "any.required": "OTP is required",
+  }),
+  referenceCode: Joi.string().required().messages({
+    "any.required": "Reference code is required",
+  }),
+  actionType: Joi.string()
+    .valid(
+      CONSTANTS.ACTION_TYPES.PASSWORD.FORGOT,
+      CONSTANTS.ACTION_TYPES.VERIFY.EMAIL,
+      CONSTANTS.ACTION_TYPES.VERIFY.MOBILE,
+      CONSTANTS.ACTION_TYPES.PASSWORD.RESET
+    )
+    .required()
+    .messages({
+      "any.only": "Invalid action type",
+      "any.required": "Action type is required",
+    }),
+}).options({ allowUnknown: false });
+
 module.exports = {
   // rules
   uuidRule,
@@ -56,5 +78,6 @@ module.exports = {
   idValidation,
   nameValidation,
   emailEnqueValidation,
-  suspensionValidation
+  suspensionValidation,
+  otpValidation,
 }
