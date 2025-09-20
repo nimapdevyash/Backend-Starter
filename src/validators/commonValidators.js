@@ -6,9 +6,8 @@ const uuidRule = Joi.string()
   .required()
   .messages({ "string.guid": "Invalid UUID" });
 
-const emailRule = Joi.string().email().required().messages({
+const emailRule = Joi.string().email().messages({
   "string.email": "Invalid email",
-  "any.required": "Email is required",
 });
 
 const passwordRule = Joi.string()

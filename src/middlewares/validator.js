@@ -2,6 +2,7 @@ const httpStatus = require("http-status-codes");
 const { validation_types_enums } = require("../../utils/enums");
 const { throwIfUnprocessableEntityError } = require("../../utils/customError");
 const { ErrorMessage } = require("../../utils/responseMessages");
+const { StatusCodes } = require("http-status-codes");
 
 exports.validate =
   ({ schema, type = validation_types_enums.body }) =>

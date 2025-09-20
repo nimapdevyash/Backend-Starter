@@ -14,7 +14,8 @@ exports.registerUser = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   const id = req.params.id;
-  const result = await userService.updateUser(id, req.body);
+  const userData = req.body;
+  const result = await userService.updateUser({id, userData});
   return response.created(res, result);
 };
 
@@ -25,7 +26,7 @@ exports.listUsers = async (req, res) => {
 
 exports.getUserById = async (req, res) => {
   const id = req.params.id;
-  const result = await userService.getUserById(id);
+  const result = await userService.getUserById({id});
   return response.ok(res, result);
 };
 

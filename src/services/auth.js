@@ -146,6 +146,7 @@ exports.verifyEmail = async ({id}) => {
       referenceCode,
       otp,
       validTill,
+      validTill,
       userId: userRecord.id,
       recipientField: userRecord.email,
       actionType: CONSTANTS.ACTION_TYPES.VERIFY.EMAIL,
@@ -159,7 +160,7 @@ exports.verifyEmail = async ({id}) => {
   enqueueEmail({
     to: userRecord.email,
     subject: emailTemplateRecord.subject,
-    html: populateTemplate({data: {...userRecord , otp} , templateString: emailTemplateRecord.html}) 
+    html: populateTemplate({data: {...userRecord , otp, validTill: validTill.toLocaleString() } , templateString: emailTemplateRecord.html}) 
   });
 
   return handleSuccess({message: SuccessMesage.SENT("OTP"), data:{ referenceCode }});
