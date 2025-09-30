@@ -32,14 +32,10 @@ exports.createUser = async ({email , password}) => {
 exports.updateUser = async ({id, userData}) => {
   
   const userRecord = await findByPk({model: models.user , id});
+  console.log(userRecord);
   // throw if user not found
-  throwIfNoDataFoundError({condition : !userRecord , message: ErrorMessage.INVALID("UserId")})
+  throwIfNoDataFoundError({condition : userRecord , message: ErrorMessage.INVALID("UserId")})
 
-  if(userData.languageId){
-    const languageRecord = await findByPk({model: models.language,id:  userData.languageId});
-    // throw if language not found
-    throwIfNoDataFoundError({condition: !languageRecord , message: ErrorMessage.INVALID("Language Id")});
-  }
   const updatedUser = await update({model: models.user, condition: { id }, updatedBody: userData});
   throwIfInternalServerError({condition: !updatedUser[0] , message: ErrorMessage.SERVER_ERROR() });
 
@@ -51,11 +47,11 @@ exports.listUsers = async ({page = 1 , limit = 10 }) => {
   const userRecords = await findAll({
     model: models.user,
     attributes: { exclude: ["password", "updatedAt", "deletedAt"] },
-    include: [{ model: models.language, attributes: ["name"] }],
     ...getPagination({ limit, page }),
   });
+  
   // findAll returns an array — check length
-  throwIfNoDataFoundError({condition: !userRecords || userRecords.length === 0 , message: ErrorMessage.NOT_FOUND("Users")})
+  throwIfNoDataFoundError({condition: userRecords || userRecords.length === 0 , message: ErrorMessage.NOT_FOUND("Users")})
 
   return handleSuccess({message: SuccessMesage.FETCHED("Users") , data: userRecords})
 }
@@ -64,7 +60,6 @@ exports.getUserById = async ({id})  => {
   const userRecord = await findByPk({
     model: models.user,
     id,
-    include: [ { model: models.language, attributes: ["name"], } ],
     attributes: { exclude: ["password", "updatedAt", "deletedAt"] },
   });
   throwIfBadRequestError({condition: !userRecord , message: ErrorMessage.INVALID("User Id")});

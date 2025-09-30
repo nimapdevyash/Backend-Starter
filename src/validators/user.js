@@ -32,7 +32,7 @@ exports.updateUserValidation = Joi.object({
   id: uuidRule.messages({ "any.required": "User ID is required" }),
   firstName: Joi.string(),
   lastName: Joi.string(),
-  email: emailRule,
+  email:emailRule.optional(),
   mobile: Joi.string().min(10).max(12),
 }).options({ allowUnknown: false });
 
