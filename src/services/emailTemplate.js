@@ -1,64 +1,140 @@
-const {handleSuccess} = require("../../utils/commonFunctions");
+/* eslint-disable max-len */
+const { handleSuccess, getPagination } = require("../../utils/commonFunctions");
 const models = require("../models");
-const { InternalServerError, BadRequestError, throwIfDataFoundError } = require('../../utils/customError');
-const {ErrorMessage, SuccessMesage} = require("../../utils/responseMessages");
-const { findOne, create, findAll } = require("../../utils/dbOperations");
+const {
+  InternalServerError,
+  BadRequestError,
+  throwIfDataFoundError,
+  throwIfNoDataFoundError,
+  throwIfInternalServerError,
+  throwIfBadRequestError,
+} = require("../../utils/customError");
+const { ErrorMessage, SuccessMesage } = require("../../utils/responseMessages");
+const {
+  findOne,
+  create,
+  findAll,
+  findByPk,
+  update,
+  destroy,
+} = require("../../utils/dbOperations");
 
 const message = "Email Template";
 
-
+// ✅ Add new template
 exports.addEmailTemplate = async ({ userId, subject, html, name }) => {
+  const templateRecord = await findOne({
+    model: models.emailTemplate,
+    condition: { name },
+  });
 
-const templateRecord = await findOne({model:models.emailTemplate, condition: { name } });
-  throwIfDataFoundError({ condition: templateRecord, message: ErrorMessage.ALREADY_EXISTS("Name")});
+  throwIfDataFoundError({
+    condition: templateRecord,
+    message: ErrorMessage.ALREADY_EXISTS("Name"),
+  });
 
-  const templateAdded = await create({model:models.emailTemplate, body:{ subject, createdBy: userId,updatedBy: userId, html, name }});
+  const templateAdded = await create({
+    model: models.emailTemplate,
+    body: { subject, createdBy: userId, updatedBy: userId, html, name },
+  });
 
-  if (!templateAdded)  throw new InternalServerError();
+  throwIfInternalServerError({
+    condition: !templateAdded,
+    message: ErrorMessage.SERVER_ERROR(),
+  });
 
-  return handleSuccess(SuccessMesage.CREATED(message));
+  return handleSuccess({ message: SuccessMesage.CREATED(message) });
 };
 
-exports.listEmailTemplates = async (query) => {
-  
-    let page = Number(query.page) || 1;
-    let limit = Number(query.limit) || 10; 
+// ✅ List all templates with pagination
+exports.listEmailTemplates = async ({ page = 1, limit = 10 }) => {
+  const templateRecords = await findAll({
+    model: models.emailTemplate,
+    ...getPagination({ page, limit }),
+  });
 
-  const templateRecord = await findAll(models.emailTemplate, {
-    ...commonFunctions.getPagination({
-      page,
-      limit,
-    }),
-  }); 
-  commonFunctions.dataNotFound({ data: templateRecord, message: ErrorMessage.GENERAL_ERROR.DATA_NOT_FOUND.message });
+  throwIfNoDataFoundError({
+    condition: !templateRecords || templateRecords.length === 0,
+    message: ErrorMessage.NOT_FOUND("Email Templates"),
+  });
 
-  return handleSuccess( SuccessMesage.FETCHED(message), templateRecord);
+  return handleSuccess({
+    message: SuccessMesage.FETCHED(message),
+    data: templateRecords,
+  });
 };
 
+// ✅ Get template by ID
 exports.getTemplateById = async ({ id }) => {
-  const templateRecord = await commonFunctions.findByPk(models.emailTemplate, id);
-  commonFunctions.dataNotFound({ data: templateRecord, message: ErrorMessage.GENERAL_ERROR.DATA_NOT_FOUND.message });
+  const templateRecord = await findByPk({
+    model: models.emailTemplate,
+    id,
+  });
 
-  return handleSuccess(SuccessMesage.FETCHED(message), templateRecord);
+  throwIfBadRequestError({
+    condition: !templateRecord,
+    message: ErrorMessage.INVALID("Email Template Id"),
+  });
+
+  return handleSuccess({
+    message: SuccessMesage.FETCHED(message),
+    data: templateRecord,
+  });
 };
 
+// ✅ Get template by Name
 exports.getTemplateByName = async ({ name }) => {
-  const templateRecord = await commonFunctions.findOne(models.emailTemplate, {name});
-  commonFunctions.dataNotFound({ data: templateRecord, message: ErrorMessage.GENERAL_ERROR.DATA_NOT_FOUND.message });
+  const templateRecord = await findOne({
+    model: models.emailTemplate,
+    condition: { name },
+  });
 
-  return handleSuccess(SuccessMesage.FETCHED(message), templateRecord);
+  throwIfBadRequestError({
+    condition: !templateRecord,
+    message: ErrorMessage.INVALID("Email Template Name"),
+  });
+
+  return handleSuccess({
+    message: SuccessMesage.FETCHED(message),
+    data: templateRecord,
+  });
 };
 
-exports.updateTemplateById = async (id, updateBody) => {
-  const updatedTemplate = await commonFunctions.update(models.emailTemplate, { id }, updateBody);
+// ✅ Update template by ID
+exports.updateTemplateById = async ({ id, updateBody }) => {
+  const templateRecord = await findByPk({ model: models.emailTemplate, id });
 
-  if(!updatedTemplate[0]) throw new BadRequestError(`Email Template with id ${id} not found`);
-  return handleSuccess(SuccessMesage.UPDATED(message));
+  throwIfBadRequestError({
+    condition: !templateRecord,
+    message: ErrorMessage.INVALID("Email Template Id"),
+  });
+console.log(updateBody);
+  const updatedRecord = await update({
+    model: models.emailTemplate,
+    condition: { id },
+    updatedBody: updateBody,
+    individualHooks: true,
+  });
+
+  throwIfInternalServerError({
+    condition: !updatedRecord[0],
+    message: ErrorMessage.SERVER_ERROR(),
+  });
+
+  return handleSuccess({ message: SuccessMesage.UPDATED(message) });
 };
 
-exports.removeTemplateById = async ({id}) => {
-  const removedTemplate = await commonFunctions.destroy(models.emailTemplate, { id, });
-  commonFunctions.dataNotFound({ data: removedTemplate, message: ErrorMessage.GENERAL_ERROR.DATA_NOT_FOUND.message });
+// ✅ Delete template by ID
+exports.removeTemplateById = async ({ id }) => {
+  const removedTemplate = await destroy({
+    model: models.emailTemplate,
+    condition: { id },
+  });
 
-  return handleSuccess(SuccessMesage.DELETED(message));
+  throwIfBadRequestError({
+    condition: !removedTemplate,
+    message: ErrorMessage.INVALID("Email Template Id"),
+  });
+
+  return handleSuccess({ message: SuccessMesage.DELETED(message) });
 };

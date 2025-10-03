@@ -17,9 +17,9 @@ const { nameValidation, idValidation } = require("../validators/commonValidators
 
 router.post('/' ,checkAuth,/* checkPermission,*/ validate(createEmailTemplateValidation), errorWrapper(addEmailTemplate));
 router.get('/', checkAuth, /* checkPermission,*/ errorWrapper(listEmailTemplates));
-router.get('/:id', checkAuth, /* checkPermission,*/ validate(idValidation) ,errorWrapper(getTemplateById));
+router.get('/:id', checkAuth, /* checkPermission,*/ errorWrapper(getTemplateById));
 router.get('/name/:name', checkAuth, /* checkPermission,*/ validate(nameValidation), errorWrapper(getTemplateByName));
-router.put('/:id', checkAuth, /* checkPermission,*/ validate(updateEmailTemplateValidation), errorWrapper(updateTemplateById));
-router.delete('/:id', checkAuth, /* checkPermission,*/ validate(idValidation), errorWrapper(removeTemplateById));
+router.put('/:id', checkAuth, /* checkPermission,*/ errorWrapper(updateTemplateById));
+router.delete('/:id', checkAuth, /* checkPermission,*/errorWrapper(removeTemplateById));
 
 module.exports = router;

@@ -80,7 +80,7 @@ exports.findAll = async ({
     raw,
     nested,
   });
-
+  
   return fetchedRecord;
 };
 

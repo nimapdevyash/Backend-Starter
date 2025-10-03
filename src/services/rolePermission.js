@@ -1,80 +1,111 @@
- 
-/* eslint-disable max-len */ 
-const {handleSuccess} = require('../../utils/commonFunctions');
-const { throwIfDataFoundError, throwIfInternalServerError } = require('../../utils/customError');
-const { findOne, create } = require('../../utils/dbOperations');
+/* eslint-disable max-len */
+const { handleSuccess, getPagination } = require('../../utils/commonFunctions');
+const { throwIfDataFoundError, throwIfInternalServerError, throwIfNoDataFoundError } = require('../../utils/customError');
+const { create, findAll, findByPk, update, destroy } = require('../../utils/dbOperations');
 const { ErrorMessage, SuccessMesage } = require('../../utils/responseMessages');
 const models = require('../models');
-const db = require('../models');
 
-exports.createRolePermission = async(rolePermissionData) => { 
-
-  const rolePermissionRecord = await findOne({
+exports.createRolePermission = async (rolePermissionData) => {
+  // Check if record already exists
+  const existingRecord = await findAll({
     model: models.rolePermission,
     condition: {
       roleId: rolePermissionData.roleId,
       permissionId: rolePermissionData.permissionId,
     },
   });
-  throwIfDataFoundError({condition: rolePermissionRecord , message: ErrorMessage.ALREADY_EXISTS("Record")});
 
-  const addRolePermission = await create({model: models.rolePermission, body: rolePermissionData});
-  throwIfInternalServerError({condition : addRolePermission , message: ErrorMessage.SERVER_ERROR()});
+  throwIfDataFoundError({
+    condition: existingRecord.length > 0,
+    message: ErrorMessage.ALREADY_EXISTS('Role Permission'),
+  });
 
-  return handleSuccess({message: SuccessMesage.CREATED("Role Permission")}); 
-}; 
+  const addedRecord = await create({ model: models.rolePermission, body: rolePermissionData });
+  throwIfInternalServerError({
+    condition: !addedRecord,
+    message: ErrorMessage.SERVER_ERROR(),
+  });
 
-// TODO: work on this and payment integration
+  return handleSuccess({ message: SuccessMesage.CREATED('Role Permission') });
+};
 
-exports.fetchRolePermissionDetails = async(query) => { 
-  const { fetchAll } = query;
-  let page = Number(query.page) || 1;
-  let limit = Number(query.limit) || 10;
-  let options = {};
-  
-  options = {...options , ...commonFunctions.getPagination({limit , page})};
+exports.fetchRolePermissionDetails = async ({ page = 1, limit = 10, fetchAll }) => {
+  const options = fetchAll === 'true' ? {} : getPagination({ page, limit });
 
-  if(fetchAll === 'true') {
-    delete options.limit;
-    delete options.offset;
-  }
-  const rolePermissionRecord = await commonFunctions.findAll(db.rolePermission, options);
-  commonFunctions.dataNotFound({data: rolePermissionRecord , message: ErrorMessage.GENERAL_ERROR.DATA_NOT_FOUND.message});
+  const rolePermissionRecords = await findAll({
+    model: models.rolePermission,
+    ...options,
+  });
+  throwIfNoDataFoundError({
+    condition: rolePermissionRecords || rolePermissionRecords.length === 0,
+    message: ErrorMessage.NOT_FOUND('Role Permission Records'),
+  });
 
-  return handleSuccess( SuccessMesage.FETCHED("Role Permission"), rolePermissionRecord);
-}; 
+  return handleSuccess({
+    message: SuccessMesage.FETCHED('Role Permission'),
+    data: rolePermissionRecords,
+  });
+};
 
-exports.fetchRolePermissionById = async(id) => { 
-  const rolePermissionRecord = await commonFunctions.findOne(db.rolePermission, {condition: {id}});
-  commonFunctions.dataNotFound({data: rolePermissionRecord , message: ErrorMessage.GENERAL_ERROR.DATA_NOT_FOUND.message});
-  return handleSuccess(SuccessMesage.FETCHED("Role Permisson"), rolePermissionRecord); 
-}; 
+exports.fetchRolePermissionById = async ({ id }) => {
+  const record = await findByPk({ model: models.rolePermission, id });
+  console.log(record);
+  throwIfNoDataFoundError({
+    condition: record,
+    message: ErrorMessage.INVALID('Role Permission Id'),
+  });
+  console.log(record);
+  return handleSuccess({ message: SuccessMesage.FETCHED('Role Permission'), data: record });
+};
 
-exports.updateRolePermissionById = async( id, updateBody) => { 
-  const rolePermissionRecord = await commonFunctions.findOne(db.rolePermission, { id });
-  commonFunctions.dataNotFound({data: rolePermissionRecord , message: ErrorMessage.GENERAL_ERROR.DATA_NOT_FOUND.message});
+exports.updateRolePermissionById = async ({ id, updateData }) => {
+  const existingRecord = await findByPk({ model: models.rolePermission, id });
+  throwIfNoDataFoundError({
+    condition: existingRecord,
+    message: ErrorMessage.INVALID('Role Permission Id'),
+  });
 
-  const updateRolePermission = await commonFunctions.update(db.rolePermission, { id }, updateBody);
-  commonFunctions.dataNotFound({data: updateRolePermission[0] , message: ErrorMessage.GENERAL_ERROR.SERVER_ERROR.message });
-  return handleSuccess(SuccessMesage.UPDATED("Role Permission")); 
-}; 
+  const updatedRecord = await update({
+    model: models.rolePermission,
+    condition: { id },
+    updatedBody: updateData,
+    individualHooks: true,
+  });
 
-exports.deleteRolePermissionById = async(id) => { 
-  const removedRolePermission = await commonFunctions.destroy(db.rolePermission, { id });
-  commonFunctions.dataNotFound({data: removedRolePermission, message: ErrorMessage.GENERAL_ERROR.DATA_NOT_FOUND.message});
+  throwIfInternalServerError({
+    condition: !updatedRecord[0],
+    message: ErrorMessage.SERVER_ERROR(),
+  });
 
-  return handleSuccess(SuccessMesage.DELETED("Role Permission"));
-}; 
+  return handleSuccess({ message: SuccessMesage.UPDATED('Role Permission') });
+};
 
-exports.bulkUpdateRolePermissions = async(body) => {
-  const { roleId, permissionIds } = body;
+exports.deleteRolePermissionById = async ({ id }) => {
+  const removedRecord = await destroy({ model: models.rolePermission, condition: { id } });
+  throwIfNoDataFoundError({
+    condition: removedRecord,
+    message: ErrorMessage.INVALID('Role Permission Id'),
+  });
 
-  await commonFunctions.destroy(db.rolePermission, { roleId }, true);
-  const rolePermissionFields = permissionIds.map((data) =>({
-    roleId: roleId,
-    permissionId: data,
+  return handleSuccess({ message: SuccessMesage.DELETED('Role Permission') });
+};
+
+exports.bulkUpdateRolePermissions = async ({ roleId, permissionIds }) => {
+  // Delete existing records
+  await destroy({ model: models.rolePermission, condition: { roleId }, force: true });
+
+  // Prepare new records
+  const rolePermissionFields = permissionIds.map((permissionId) => ({
+    roleId,
+    permissionId,
   }));
- 
-  await commonFunctions.create(db.rolePermission, rolePermissionFields, true);
-  return handleSuccess(SuccessMesage.CREATED("Role Permission"));
+
+  // Bulk create
+  const createdRecords = await create({ model: models.rolePermission, body: rolePermissionFields, bulk: true });
+  throwIfInternalServerError({
+    condition: !createdRecords,
+    message: ErrorMessage.SERVER_ERROR(),
+  });
+
+  return handleSuccess({ message: SuccessMesage.CREATED('Role Permission') });
 };

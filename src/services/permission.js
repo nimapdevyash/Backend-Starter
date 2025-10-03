@@ -46,6 +46,7 @@ exports.fetchPermissionById = async ({ id }) => {
 }; 
 
 exports.updatePermissionById = async({ id, updateData }) => { 
+
   const permissionRecord = await findByPk({model: models.permission, id});
   throwIfBadRequestError({condition: !permissionRecord , message: ErrorMessage.INVALID("Permission Id")});
 
