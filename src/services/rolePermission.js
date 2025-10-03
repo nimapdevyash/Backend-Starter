@@ -1,4 +1,5 @@
-/* eslint-disable max-len */
+ 
+/* eslint-disable max-len */ 
 const { handleSuccess, getPagination } = require('../../utils/commonFunctions');
 const { throwIfDataFoundError, throwIfInternalServerError, throwIfNoDataFoundError } = require('../../utils/customError');
 const { create, findAll, findByPk, update, destroy } = require('../../utils/dbOperations');
@@ -27,7 +28,7 @@ exports.createRolePermission = async (rolePermissionData) => {
   });
 
   return handleSuccess({ message: SuccessMesage.CREATED('Role Permission') });
-};
+}; 
 
 exports.fetchRolePermissionDetails = async ({ page = 1, limit = 10, fetchAll }) => {
   const options = fetchAll === 'true' ? {} : getPagination({ page, limit });
@@ -45,7 +46,7 @@ exports.fetchRolePermissionDetails = async ({ page = 1, limit = 10, fetchAll }) 
     message: SuccessMesage.FETCHED('Role Permission'),
     data: rolePermissionRecords,
   });
-};
+}; 
 
 exports.fetchRolePermissionById = async ({ id }) => {
   const record = await findByPk({ model: models.rolePermission, id });
@@ -56,7 +57,7 @@ exports.fetchRolePermissionById = async ({ id }) => {
   });
   console.log(record);
   return handleSuccess({ message: SuccessMesage.FETCHED('Role Permission'), data: record });
-};
+}; 
 
 exports.updateRolePermissionById = async ({ id, updateData }) => {
   const existingRecord = await findByPk({ model: models.rolePermission, id });
@@ -78,7 +79,7 @@ exports.updateRolePermissionById = async ({ id, updateData }) => {
   });
 
   return handleSuccess({ message: SuccessMesage.UPDATED('Role Permission') });
-};
+}; 
 
 exports.deleteRolePermissionById = async ({ id }) => {
   const removedRecord = await destroy({ model: models.rolePermission, condition: { id } });
@@ -88,7 +89,7 @@ exports.deleteRolePermissionById = async ({ id }) => {
   });
 
   return handleSuccess({ message: SuccessMesage.DELETED('Role Permission') });
-};
+}; 
 
 exports.bulkUpdateRolePermissions = async ({ roleId, permissionIds }) => {
   // Delete existing records
@@ -99,7 +100,7 @@ exports.bulkUpdateRolePermissions = async ({ roleId, permissionIds }) => {
     roleId,
     permissionId,
   }));
-
+ 
   // Bulk create
   const createdRecords = await create({ model: models.rolePermission, body: rolePermissionFields, bulk: true });
   throwIfInternalServerError({

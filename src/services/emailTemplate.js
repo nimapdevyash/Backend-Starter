@@ -51,7 +51,7 @@ exports.listEmailTemplates = async ({ page = 1, limit = 10 }) => {
   const templateRecords = await findAll({
     model: models.emailTemplate,
     ...getPagination({ page, limit }),
-  });
+  }); 
 
   throwIfNoDataFoundError({
     condition: !templateRecords || templateRecords.length === 0,
