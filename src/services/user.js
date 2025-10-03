@@ -30,6 +30,7 @@ exports.createUser = async ({email , password}) => {
 };
 
 exports.updateUser = async ({id, userData}) => {
+  
   const userRecord = await findByPk({model: models.user , id});
   // throw if user not found
   throwIfNoDataFoundError({condition : !userRecord , message: ErrorMessage.INVALID("UserId")})
@@ -60,7 +61,6 @@ exports.listUsers = async ({page = 1 , limit = 10 }) => {
 }
 
 exports.getUserById = async ({id})  => {
-
   const userRecord = await findByPk({
     model: models.user,
     id,

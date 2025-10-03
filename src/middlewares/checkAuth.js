@@ -12,8 +12,9 @@ const models = require("../models/index");
 
 module.exports = async (req, res, next) => {
   try {
+    
     // 1. Validate authorization header
-    const authorizationHeader = req.headers.authorization;
+    const authorizationHeader = req.headers["authorization"];
     if (!authorizationHeader) return unauthorizedResponse(res);
 
     // 2. Extract access token

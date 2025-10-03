@@ -146,6 +146,7 @@ exports.verifyEmail = async ({id}) => {
       referenceCode,
       otp,
       validTill,
+      validTill,
       userId: userRecord.id,
       recipientField: userRecord.email,
       actionType: CONSTANTS.ACTION_TYPES.VERIFY.EMAIL,
@@ -159,7 +160,7 @@ exports.verifyEmail = async ({id}) => {
   enqueueEmail({
     to: userRecord.email,
     subject: emailTemplateRecord.subject,
-    html: populateTemplate({data: {...userRecord , otp} , templateString: emailTemplateRecord.html}) 
+    html: populateTemplate({data: {...userRecord , otp, validTill: validTill.toLocaleString() } , templateString: emailTemplateRecord.html}) 
   });
 
   return handleSuccess({message: SuccessMesage.SENT("OTP"), data:{ referenceCode }});
@@ -173,7 +174,8 @@ exports.changePassword = async ({userId , oldPassword, newPassword}) => {
     const userRecord = await findByPk({model: models.user, id: userId,raw:false},);
     throwIfNoDataFoundError({ condition: userRecord, message: ErrorMessage.NOT_FOUND("User") });
 
-    await userRecord.comparePassword(oldPassword);
+    const invalidOldPassword = await userRecord.comparePassword(oldPassword);
+    throwIfValidationError({ condition: !invalidOldPassword, message: ErrorMessage.INVALID("Old Password") });
     await update({
       model: models.user,
       condition: { id: userRecord.id },
